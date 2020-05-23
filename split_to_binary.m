@@ -59,9 +59,36 @@ L2 = watershed(D2);
 bw3 = bw;
 bw3(L2 == 0) = 0;
 %increase watershed line width from 1px to 3px
-bw4 = imerode(bw3, strel('disk', 1))
+bw4 = imerode(bw3, strel('disk', 1));
 
+%figure(1)
+%title('before refinement');
+%imshow(bw4);
 
-results.post     = bw4;
+%refining the images to remove aggregates near edges
+for rot = 1:4 %rotating image for each side 
+    bw4 = imrotate(bw4,90);
+    aggregates = bwconncomp(bw4).PixelIdxList; %group aggregates by PIXELS
+    for aggregate = 1:10 %eliminate first ten aggregates
+        bw4(aggregates{aggregate}) = 0; 
+    end %stop removing
+end %stop rotating
+
+%removing small aggregates/clean image...
+bw5 = bw4; 
+numPixels = cellfun(@numel,bwconncomp(bw5).PixelIdxList);
+for aggregate = 1:length(numPixels)
+    pixel_min = 150; %pixels too small
+    if numPixels(aggregate) < pixel_min
+        bw5(bwconncomp(bw4).PixelIdxList{aggregate}) = 0;
+    end %stop eliminating
+end %stop evaluation
+
+%figure(2)
+%title('after refininement')
+%imshow(bw5)
+
+results.post = bw5;
+end
 
 %--------------------------------------------------------------------------

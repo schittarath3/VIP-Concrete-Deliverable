@@ -1,0 +1,35 @@
+Get better/more aggregates
+	Remove aggregates from the edge
+	Process into binary image
+	Stack into a 3D array in MATLAB
+	Use bwconncomp() to find components that are not face-to-face (6-connected)
+
+Build and remesh a 3D model
+Select and export good aggregates to .stl files using meshlab
+https://forum.image.sc/t/how-can-i-identify-and-export-individual-particles-to-an-stl-file/20715/7
+
+Path 1 | Packing problem | More computational power:
+	Find algorithm that packs irregular objects
+	Watershed the aggregates at overlap
+Path 2 | Little overlap | Lower density:
+	Make a predifined 3D matrix with mini 3D matrices (randomly sized) in between 
+	Store aggregates in each mini matrix with random orientation and maximize size of aggregate (packing problem)
+		Stop once all boxes are full and ideal density is reached
+		or
+		Remove imaginary boxes and perform transformations
+Path 3 | iterative:
+	Enlarge every selected aggregate a little bit.
+	Put one into the defined space (a box) with random coordinates and random direction.
+	Insert another aggregate
+		If there is overlap:
+			Redo the insertion with different coordinates or orientation
+			or
+			Watershed transformation
+	Check the volume fraction. If the volume of all existed aggregates higher than a certain ratio of defined space, stop.
+	Shrink the size of aggregates to original.
+		In the end, it might still have some aggregates contact with their neighbors. Then, try to move or rotate it to separate it from their neighbors. Or even change the shape of the attached aggregates.
+		or
+		Watershed transformation
+	If all of them are detached to each other, volume the volume fraction again. (?)
+	
+Export stl files

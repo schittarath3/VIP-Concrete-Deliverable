@@ -41,8 +41,8 @@ co_img = img4 - bg_img;
 bw = imbinarize(co_img); 
 
 %remove artifact objects and fill in holes in binary image
-pixelAreaToRemove = 600; 
-bw = bwareaopen(bw, pixelAreaToRemove); 
+%pixelAreaToRemove = 600; 
+%bw = bwareaopen(bw, pixelAreaToRemove); 
 bw = ~bwareaopen(~bw, 500);
 
 %find connected components for separation

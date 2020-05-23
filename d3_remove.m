@@ -1,30 +1,33 @@
 clc
 clear
 
-im1 = imread("D:\VIP Concrete\Example\3. Binary Images\bottom_left\bl_top0076_post.png");
-im2 = imread("D:\VIP Concrete\Example\3. Binary Images\bottom_left\bl_top0077_post.png");
-im3 = imread("D:\VIP Concrete\Example\3. Binary Images\bottom_left\bl_top0078_post.png");
-%create psuedo binary image
-% mat1 = [1 1 0 0; 1 1 0 0; 0 0 0 0; 0 0 0 0];
-% mat2 = [0 0 0 0; 0 0 0 0; 0 0 1 1; 0 0 1 1];
-% mat3 = [0 0 0 0; 0 0 0 0; 0 0 1 1; 0 0 1 1];
+im1 = imread("Example\3. Binary Images\bottom_left\bl_top0076_post.png");
+image_size = size(im1);
 
-%create 3D matrix
-mat3D = cat(3, im1, im2, im3);
+mat3D = [];
+base = "D:\VIP Concrete Git\Example\3. Binary Images\bottom_left\bl_top00";
+for i = 54:94
+    fn = strcat(base, num2str(i), '_post.png');
+    a = imread(fn);
+    mat3D(:,:,i-53) = a;
+end
 
 CC = bwconncomp(mat3D, 18);
 
 pixels = CC.PixelIdxList;
-
 a = size(CC.PixelIdxList);
 num_clusters = a(2);
 
+new_image_stack = zeros(image_size(1), image_size(2), 41);
 for cluster = 1:num_clusters
-    if cluster == 36
-        continue
-    end
     for i = 1:length(pixels{1, cluster})
-        mat3D(pixels{1, cluster}(i)) = 0;
+        new_image_stack(pixels{1, cluster}(i)) = 1;
     end
+end
+
+image_base = "D:\VIP Concrete Analysis\Cluster Test\layer"
+for i = 1:41
+    img = new_image_stack(:,:,i)
+    imwrite(img, strcat(image_base, num2str(i), '.png'))
 end
 

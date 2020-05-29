@@ -6,9 +6,15 @@ clear
 pullFiles
 for i = 1:samples
     structname = strcat('agg',num2str(i));
-    repos.(structname).Points = aggList{i}.Points;
+    repos.(structname).Points = normalize(aggList{i}.Points);
     repos.(structname).ConnectivityList = aggList{i}.ConnectivityList;
+    
+    [Vbox, length, width, height] = getVolBox(aggList{i}.Points);
+    repos.(structname).BoxHeight = height;
+    repos.(structname).BoxWidth = width;
+    repos.(structname).BoxLength = length;
     repos.(structname).Volume = getVolMesh(aggList{i}.Points);
+    repos.(structname).VolumeFraction = getVolMesh(aggList{i}.Points)./Vbox;
 end
 
 %Mesh Repository: [x y z connectivitylist volumefraction l w h];
@@ -76,12 +82,13 @@ function [Vbox, l, w, h] = getVolBox(datapoints)
 %Input: datapoints - written as column vectors [x y z];
 %Output: V - the volume of the container/box
 %            l, w, h - dimensions of the box (length, width, height)
+datapoints = normalize(datapoints);
+
 w = abs(max(datapoints(:,1)) - min(datapoints(:,1)));
 l = abs(max(datapoints(:,2)) - min(datapoints(:,2)));
 h = abs(max(datapoints(:,3)) - min(datapoints(:,3)));
 Vbox = w.*l.*h;
 end
-
 function Vmesh = getVolMesh(datapoints)
 object = alphaShape(datapoints);
 Vmesh = volume(object);

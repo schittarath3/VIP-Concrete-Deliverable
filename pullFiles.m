@@ -1,3 +1,4 @@
+%comment
 fileList = dir('STL Files\Aggregates Processed\*.stl');
 fileList = struct2cell(fileList);
 aggList = cell(1, length(fileList));

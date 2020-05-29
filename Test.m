@@ -8,6 +8,7 @@ for i = 1:samples
     structname = strcat('agg',num2str(i));
     repos.(structname).Points = aggList{i}.Points;
     repos.(structname).ConnectivityList = aggList{i}.ConnectivityList;
+    repos.(structname).Volume = getVolMesh(aggList{i}.Points);
 end
 
 %Mesh Repository: [x y z connectivitylist volumefraction l w h];
@@ -81,9 +82,7 @@ h = abs(max(datapoints(:,3)) - min(datapoints(:,3)));
 Vbox = w.*l.*h;
 end
 
-function Vmesh = getVolMesh(filename)
-model = createpde;
-importGeometry(model,filename);
-mesh = generateMesh(model);
-Vmesh = volume(mesh);
+function Vmesh = getVolMesh(datapoints)
+object = alphaShape(datapoints);
+Vmesh = volume(object);
 end

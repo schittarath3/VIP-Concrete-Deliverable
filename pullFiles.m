@@ -10,14 +10,4 @@ for i = 1:samples
     file = fileList{1, i};
     fn = strcat(folder, '\', file);
     aggList{i} = stlread(fn);
-    
-    %obtain mesh volume
-    try
-    model = createpde;
-    importGeometry(model,fn);
-    mesh = generateMesh(model,'Hmax',5);
-    meshvol(i) = volume(mesh);
-    catch
-        disp(fn)
-    end
 end

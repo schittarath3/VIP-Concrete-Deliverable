@@ -12,9 +12,12 @@ for i = 1:samples
     aggList{i} = stlread(fn);
     
     %obtain mesh volume
-    i %for debugging (:
+    try
     model = createpde;
     importGeometry(model,fn);
-    mesh = generateMesh(model);
+    mesh = generateMesh(model,'Hmax',5);
     meshvol(i) = volume(mesh);
+    catch
+        disp(fn)
+    end
 end

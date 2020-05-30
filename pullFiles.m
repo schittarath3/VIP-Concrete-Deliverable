@@ -8,12 +8,13 @@ for i = 1:samples(2)
     %obtain stl
     folder = fileList{2, i};
     file = fileList{1, i};
+    aggName = file(1:end-4);
     fn = strcat(folder, '\', file);
     aggList{i} = stlread(fn);
    
     %generating repository of aggregates
-    repos.(fn).Points = normalize(aggList{i}.Points);
-    repos.(fn).ConnectivityList = aggList{i}.ConnectivityList;
+    repos.(aggName).Points = normalize(aggList{i}.Points);
+    repos.(aggName).ConnectivityList = aggList{i}.ConnectivityList;
     
     %finding volume fraction of boxes to pack
     model = createpde;
@@ -22,11 +23,11 @@ for i = 1:samples(2)
     Vmesh = volume(mesh);
 
     [Vbox, length, width, height] = getVolBox(aggList{i}.Points);
-    repos.(fn).BoxHeight = height;
-    repos.(fn).BoxWidth = width;
-    repos.(fn).BoxLength = length;
-    repos.(fn).Volume = Vmesh;
-    repos.(fn).VolumeFraction = Vmesh/Vbox;
+    repos.(aggName).BoxHeight = height;
+    repos.(aggName).BoxWidth = width;
+    repos.(aggName).BoxLength = length;
+    repos.(aggName).Volume = Vmesh;
+    repos.(aggName).VolumeFraction = Vmesh/Vbox;
 end
 
 function [Vbox, l, w, h] = getVolBox(datapoints)

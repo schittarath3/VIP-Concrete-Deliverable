@@ -67,7 +67,7 @@ theta_x = 0;
 theta_y = 0;
 theta_z = 0;
 
-angles = linspace(-pi/12,pi/12,50);
+angles = linspace(-pi/12,pi/12,25);
 for a= 1:length(angles)
     for b = 1:length(angles)
         for g = 1:length(angles)

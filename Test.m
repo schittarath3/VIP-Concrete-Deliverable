@@ -1,23 +1,19 @@
 clc
 clear
 
-%% Generating Repository of Aggregates
+%% Generating Repository of Aggregatesv
 %Load in all of the aggregates
 pullFiles
-for i = 1:samples
-    structname = strcat('agg',num2str(i));
-    repos.(structname).Points = normalize(aggList{i}.Points);
-    repos.(structname).ConnectivityList = aggList{i}.ConnectivityList;
-    
-    [Vbox, length, width, height] = getVolBox(aggList{i}.Points);
-    repos.(structname).BoxHeight = height;
-    repos.(structname).BoxWidth = width;
-    repos.(structname).BoxLength = length;
-    repos.(structname).Volume = getVolMesh(aggList{i}.Points);
-    repos.(structname).VolumeFraction = getVolMesh(aggList{i}.Points)./Vbox;
-end
 
-[volumefraction, theta_x, theta_y, theta_z, datapoints] = optimize(repos.agg1.Points,repos.agg1.VolumeFraction);
+% tol = 25;
+% dtpoints = generateCoords(tol,repos.agg1.Points,repos.agg1.VolumeFraction);
+% og_volumefraction = repos.agg1.VolumeFraction;
+% for i = 1:tol^3
+%     volumefraction = getVolMesh(dtpoints(:,:,i))./Vbox;
+%     if volumefraction > og_volumefraction
+%        og_volumefraction = volumefraction;
+%     end
+% end
 
 %OUTPUT: A matrix with all of the aggregates ID, include properties: Mesh
 %Volume, Box Volume (for packing), Width, Length, and Height (dim of box
@@ -61,16 +57,20 @@ Vmesh = volume(object);
 end
 
 %% FUNCTION 3: Optimize Volume Fraction
-function [volumefraction, theta_x, theta_y, theta_z, datapoints] = optimize(datapoints,volumefraction)
+function dtpoints = generateCoords(tol,datapoints,volumefraction)
 %starting condition
 theta_x = 0;
 theta_y = 0;
 theta_z = 0;
 
-angles = linspace(-pi/12,pi/12,25);
+angles = linspace(-pi/12,pi/12,tol);
+dtpoints = [];
+int = 0;
 for a= 1:length(angles)
     for b = 1:length(angles)
         for g = 1:length(angles)
+            int = int +1;
+            
             %rotate aggregate
             rotx = [1 0 0 0; 0 cos(angles(a)) -sin(angles(a)) 0; 0 sin(angles(a)) cos(angles(a)) 0; 0 0 0 1];
             roty = [cos(angles(b)) 0 sin(angles(b)) 0; 0 1 0 0; -sin(angles(b)) 0 cos(angles(b)) 0; 0 0 0 1];
@@ -91,19 +91,8 @@ for a= 1:length(angles)
                 datapointsnew(i,3) = pnew(3);
             end
             
-            datapointsnew = normalize(datapointsnew);
-            Vbox = getVolBox(datapointsnew);
-            volumefraction_new = getVolMesh(datapointsnew)./Vbox;
-            
-            %save the new configuration if it is better than the last...
-            if volumefraction_new > volumefraction
-                volumefraction = volumefraction_new;
-                theta_x = angles(a);
-                theta_y = angles(b);
-                theta_z = angles(g);
-                datapoints = datapointsnew;
+            dtpoints(:,:,int) = normalize(datapointsnew);
             end
         end
-    end
 end
 end

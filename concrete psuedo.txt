@@ -1,35 +1,39 @@
-Get better/more aggregates
-	Remove aggregates from the edge
-	Process into binary image
-	Stack into a 3D array in MATLAB
-	Use bwconncomp() to find components that are not face-to-face (6-connected)
-
-Build and remesh a 3D model
-Select and export good aggregates to .stl files using meshlab
-https://forum.image.sc/t/how-can-i-identify-and-export-individual-particles-to-an-stl-file/20715/7
-
-Path 1 | Packing problem | More computational power:
-	Find algorithm that packs irregular objects
-	Watershed the aggregates at overlap
-Path 2 | Little overlap | Lower density:
-	Make a predifined 3D matrix with mini 3D matrices (randomly sized) in between 
-	Store aggregates in each mini matrix with random orientation and maximize size of aggregate (packing problem)
-		Stop once all boxes are full and ideal density is reached
-		or
-		Remove imaginary boxes and perform transformations
-Path 3 | iterative:
-	Enlarge every selected aggregate a little bit.
-	Put one into the defined space (a box) with random coordinates and random direction.
-	Insert another aggregate
-		If there is overlap:
-			Redo the insertion with different coordinates or orientation
-			or
-			Watershed transformation
-	Check the volume fraction. If the volume of all existed aggregates higher than a certain ratio of defined space, stop.
-	Shrink the size of aggregates to original.
-		In the end, it might still have some aggregates contact with their neighbors. Then, try to move or rotate it to separate it from their neighbors. Or even change the shape of the attached aggregates.
-		or
-		Watershed transformation
-	If all of them are detached to each other, volume the volume fraction again. (?)
-	
-Export stl files
+Packing Psuedocode
+	Pre-process | Processing for aggregate done before initiation. This is done to create randomized aggregate rotations that mimick real samples of concrete
+		1. Select ~20 aggregates and duplicate aggregates
+		2. Randomize each aggregate orientation
+			*Create struct to store aggregate and its orientation value
+			*Check to see if duplicated aggregate has the same orientation
+				*If so, randomize orientation again
+		3. Create mesh for each aggregate to maximize volume fraction
+			*Associate mesh with aggregate in struct
+		4. Generate container to store aggregate meshes 
+			*Size and shape could be parameterized by function
+	Initiation  | Most part important because all downstream packing is dependent upon it
+		1. Insert random cube mesh representing aggregate into a corner 
+			*This potentially reduces the amount of dead space because 3 faces are touching the container
+		2. Remove aggregate from array
+		3. Inject aggregate into mesh, preserving orientation from pre-process
+			*Minimize deadspace by optimizing volume between aggregate and wall
+	Packing     | Optimizing volume of aggregates within entire container. We will be using a psuedo-genetic method
+		1. For all aggregates or until parameterized aggregate:container is reached...	
+			1. Randomly pick and remove aggregate and its mesh from struct (or randomly pick ~5 aggregates to test individually at each iteration)
+			2. Test all orientations of the cubic mesh (top to long; long to long; maybe horizontal and vertical translation)
+				*Make sure there are no overlaps other cubic meshes
+				*Ideally there will be no gaps between other cubic meshes
+			3. Pick the orientation that has minimal volume (or distance) between all aggregates that it is touching
+				*If the orientation is the same for a duplicated aggregate, reorientate 
+				*This can be compared to other orientations using something similar to .compareTo() method in java
+				*Hopefully, by locally optimizing dead space, it will globally decrease dead space
+			4. Use this orientation for future iterations
+	Refinement  | Volume fraction optimization backwards
+		1. Generate more aggregates?
+		2. Randomly remove each aggregate from the container and insert one of the new aggregates
+		3. Check to see if volume/distance is less than removed aggregate
+			If it is, check if orientation is the same as duplicated aggregate
+				If not, replace the old with the new
+	Quality Test| See how well the aggregates are packed in the container
+		*Global volume fraction
+		*Local volume for each aggregate, averaged or other statistical analysis
+		*Final check of overlaps and orientation duplication
+		*Option to rerun refinement step

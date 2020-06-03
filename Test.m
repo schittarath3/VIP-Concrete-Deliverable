@@ -66,33 +66,32 @@ theta_z = 0;
 angles = linspace(-pi/12,pi/12,tol);
 dtpoints = [];
 int = 0;
+g = 0;
 for a= 1:length(angles)
     for b = 1:length(angles)
-        for g = 1:length(angles)
-            int = int +1;
-            
-            %rotate aggregate
-            rotx = [1 0 0 0; 0 cos(angles(a)) -sin(angles(a)) 0; 0 sin(angles(a)) cos(angles(a)) 0; 0 0 0 1];
-            roty = [cos(angles(b)) 0 sin(angles(b)) 0; 0 1 0 0; -sin(angles(b)) 0 cos(angles(b)) 0; 0 0 0 1];
-            rotz = [cos(angles(g)) -sin(angles(g)) 0 0; sin(angles(g)) cos(angles(g)) 0 0; 0 0 1 0; 0 0 0 1];
-            R = rotx*roty*rotz;
-            
-            datapointsnew = datapoints;
-            %obtain new volume fraction 
-            for i = 1:length(datapoints(:,1))
-                x = datapoints(i,1);
-                y = datapoints(i,2);
-                z = datapoints(i,3);
-                
-                p = [x; y; z; 1];
-                pnew= R*p;
-                datapointsnew(i,1) = pnew(1);
-                datapointsnew(i,2) = pnew(2);
-                datapointsnew(i,3) = pnew(3);
-            end
-            
-            dtpoints(:,:,int) = normalize(datapointsnew);
-            end
+        int = int +1;
+
+        %rotate aggregate
+        rotx = [1 0 0 0; 0 cos(angles(a)) -sin(angles(a)) 0; 0 sin(angles(a)) cos(angles(a)) 0; 0 0 0 1];
+        roty = [cos(angles(b)) 0 sin(angles(b)) 0; 0 1 0 0; -sin(angles(b)) 0 cos(angles(b)) 0; 0 0 0 1];
+        rotz = [cos(angles(g)) -sin(angles(g)) 0 0; sin(angles(g)) cos(angles(g)) 0 0; 0 0 1 0; 0 0 0 1];
+        R = rotx*roty*rotz;
+
+        datapointsnew = datapoints;
+        %obtain new volume fraction 
+        for i = 1:length(datapoints(:,1))
+            x = datapoints(i,1);
+            y = datapoints(i,2);
+            z = datapoints(i,3);
+
+            p = [x; y; z; 1];
+            pnew= R*p;
+            datapointsnew(i,1) = pnew(1);
+            datapointsnew(i,2) = pnew(2);
+            datapointsnew(i,3) = pnew(3);
+        end
+
+        dtpoints(:,:,int) = normalize(datapointsnew);
         end
 end
 end

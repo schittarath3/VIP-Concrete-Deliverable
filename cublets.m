@@ -1,9 +1,11 @@
-clear
-clc
-
-cubeSizeInit = 300;
-nDivisions = 10;
-step = cubeSizeInit/nDivisions;
+function cubeCoords = cublets(cubeSize, nDivisions)
+%Generates a n*n*n size (n=cubeSize) cube with x (x=nDivisions) divisions
+%to insert aggregates within each cublets of ((cubeSize/nDivisions)^3)
+%size
+%Inputs: length of cube (cubeSize), number of divisions (nDivisions)
+%Output: a cell, cubeCoords, containing the coordinates of the verticies
+%       for each mini cube
+step = cubeSize/nDivisions;
 nDivisions = nDivisions + 1;
 
 cube = cell(nDivisions, nDivisions, nDivisions);
@@ -31,10 +33,5 @@ for x = 1:nDivisionsA
     end
 end
 
-cubeAlpha1 = alphaShape(preCell{1,1});
-plot(cubeAlpha1);
-hold on 
-for i = 2:nDivisionsA^3
-    plot(alphaShape(preCell{i,1}));
+cubeCoords = preCell
 end
-hold off

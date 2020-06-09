@@ -1,12 +1,14 @@
 clc 
 clear
 
-fileList = dir('STL Files\Aggregates Processed 3\*.stl');
+fileList = dir('STL Files\Aggregate Test\*.stl');
 samples = size(fileList);
 for ag = 1:samples
     try
     filename = fileList(ag,1).name;
-    agg = stlread(filename);
+    folderName = fileList(ag,1).folder;
+    fileLoc = strcat(folderName, '\', filename);
+    agg = stlread(fileLoc);
     
     %generating the points and connectivity
     pts = normalize(agg.Points);
@@ -15,11 +17,11 @@ for ag = 1:samples
     %finding volume of mesh
     set(0,'DefaultFigureVisible','off')
     model = createpde;
-    importGeometry(model,filename);
+    importGeometry(model,fileLoc);
     mesh = generateMesh(model);
     Vmesh = volume(mesh);
     figure
-    [V, nf, nv] = Volume(pts,cnt,Vmesh,filename,false);
+    [V, nf, nv] = Volume(pts,cnt,Vmesh,fileLoc,false);
     repos.(filename(1:end-4)).Vertices = nv;
     repos.(filename(1:end-4)).Faces = nf;
     

@@ -56,8 +56,6 @@ beforeTranslation = repos.(initAggName).Points;
 xyTranslate(repos.(initAggName).Points, containerAlpha, xTheta, yTheta);
 afterTranslation = repos.(initAggName).Points;
 
-
-
 %% functions
 
 function datapointsn = normalize(datapoints)

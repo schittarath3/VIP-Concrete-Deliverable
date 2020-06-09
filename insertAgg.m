@@ -1,32 +1,47 @@
-function insertRepo = insertAgg(aggRepo, cubesCell, scaleFactor)
+function insertRepo = insertAgg(aggRepo, cubesCell, scaleFactor, numOrientations)
 
-%setting up constants
+    %setting up constants
     numSlots = length(cubesCell);
     numAggs = length(fieldnames(aggRepo));
+    totalNumAgg = numAggs * numOrientations;
     scaleMat = [scaleFactor 0 0; 0 scaleFactor 0; 0 0 scaleFactor];
+    
     cubeRandIndex = randperm(numSlots); %psuedorandom array to index cubes
     aggRandIndex = randperm(numAggs); %psuedorandom array to index aggregates
-    
     aggNames = fieldnames(aggRepo);
+    orientationNames = fieldnames(aggRepo.(aggNames{1}).Orientation);
+    totalOrientations = length(orientationNames);
+    
     insertRepo = aggRepo;
-    if numSlots == numAggs
+    if numSlots == totalNumAgg
         for i = 1:numAggs %Rescaling points by scaleFactor
-            insertRepo.(aggNames{i}).Points = insertRepo.(aggNames{i}).Points * scaleMat;
+            oriRandIndex = randperm(totalOrientations, numOrientations);
+            for x = 1:numOrientations
+                oriName = orientationNames{oriRandIndex(x)}
+                insertRepo.(aggNames{i}).newOrientations.(oriName)...
+                    = insertRepo.(aggNames{i}).Orientation.(oriName) * scaleMat;
+            end
         end
         for i = 1:numAggs %associate each aggregate in aggRepo to a cube in cubeCell
-            cubeNum = cubeRandIndex(i);
-            cubelet = cubesCell{cubeNum};
-            cubeAlpha = alphaShape(cubelet);
-            aggName = aggNames{aggRandIndex(i)};
-            insertRepo.(aggName).cubeNum = cubeNum;
-            cubeCentroid = getCentroid(cubelet);
-            insertRepo.(aggName).Points = normalize(insertRepo.(aggName).Points, cubeCentroid);
-            pointCheck = ~inShape(cubeAlpha, insertRepo.(aggName).Points);
-            if pointCheck > 0
-                disp("Aggregate " + aggName + " does not fit within mini cube. Try decreasing the scaling factor.")
-                break
-            else
-                continue
+            aggName = aggNames{aggRandIndex(i)}
+            newOriNames = fieldnames(insertRepo.(aggName).newOrientations);
+            for x = 1:numOrientations
+                cubeNum = cubeRandIndex(i);
+                cubelet = cubesCell{cubeNum};
+                cubeAlpha = alphaShape(cubelet);
+                insertRepo.(aggName).cubeNum = cubeNum;
+                cubeCentroid = getCentroid(cubelet);
+                curOriName = newOriNames{x}
+                insertRepo.(aggName).newOrientations.(curOriName)... 
+                    = normalize(insertRepo.(aggName).newOrientations.(curOriName), cubeCentroid);
+                pointCheck = ~inShape(cubeAlpha, insertRepo.(aggName).newOrientations.(curOriName));
+                if pointCheck > 0
+                    disp("Aggregate " + aggName + curOriName +...
+                         " does not fit within mini cube. Try decreasing the scaling factor.")
+                    break
+                else
+                    continue
+                end
             end
         end
     else

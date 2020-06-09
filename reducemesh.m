@@ -1,7 +1,7 @@
 clc 
 clear
 
-fileList = dir('*.stl');
+fileList = dir('STL Files\Aggregates Processed 3\*.stl');
 samples = size(fileList);
 for ag = 1:samples
     try
@@ -22,9 +22,6 @@ for ag = 1:samples
     [V, nf, nv] = Volume(pts,cnt,Vmesh,filename,false);
     repos.(filename(1:end-4)).Vertices = nv;
     repos.(filename(1:end-4)).Faces = nf;
-    catch
-        disp(['error with' filename]);
-    end
     
     %rotating each of the aggregates for a set orientation...
     angles = linspace(-pi/8,pi/8,5);
@@ -37,6 +34,10 @@ for ag = 1:samples
                 repos.(filename(1:end-4)).Orientation.(orientation) = nv;
             end
         end
+    end
+    
+    catch
+        disp(['error with ' filename]);
     end
 end
 

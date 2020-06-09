@@ -1,10 +1,10 @@
 clc
 clear
 %% pull files from directory
-%pull container info and normalize
-testContainer = stlread('STL Files\container25mm.stl');
+%pull container info, normalize, and create alphaShape for container
+testContainer = stlread('STL Files\cube300mm.stl');
 testContainerNorm = normalize(testContainer.Points);
-containerAlpha = alphaShape(testContainer.Points)
+containerAlpha = alphaShape(testContainerNorm)
 
 %pull aggregate files from directory
 fileList = dir('STL Files\Aggregate Test\*.stl');
@@ -27,6 +27,7 @@ for i = 1:samples(2)
     repos.(aggName).ConnectivityList = aggList{i}.ConnectivityList;
 end
 %% testing stuff
+
 numSamples = size(fileList);
 numSamples = numSamples(1,2);
 initAgg = fileList(1,randi(numSamples));
@@ -40,7 +41,7 @@ initAggName = 'ellipsoid'
 % containerMaxZ = max(testContainer.Points(:,3));
 % containerMinX = min(testContainer.Points(:,1));
 % containerMinY = min(testContainer.Points(:,2));
-containerMinZ = min(testContainer.Points(:,3))
+containerMinZ = min(testContainerNorm(:,3))
 
 
 %make min z-coord equal to container's min z-coord
@@ -52,9 +53,7 @@ end
 %random translation of coordinates on xy plane
 xTheta = (-1 + 2.*rand(1,1))*pi;
 yTheta = (-1 + 2.*rand(1,1))*pi;
-beforeTranslation = repos.(initAggName).Points;
-xyTranslate(repos.(initAggName).Points, containerAlpha, xTheta, yTheta);
-afterTranslation = repos.(initAggName).Points;
+repos.(initAggName).Points = xyTranslate(repos.(initAggName).Points, containerAlpha, xTheta, yTheta);
 
 %% functions
 
@@ -77,11 +76,10 @@ for vertice = 1:length(datapoints)
 end
 end
 
-function xyTranslate(datapoints, containerAlpha, xTheta, yTheta)
+function x = xyTranslate(datapoints, containerAlpha, xTheta, yTheta)
 %Input: datapoints - written as column vectors [x y z];
 %Translates datapoints on xy-plane in theta direction until aggregates' max(x) or max(y) reaches max(x) or
 %max(y)of container.
-    step = 0
     while true
         xTranslate = 0.25*cos(xTheta);
         yTranslate = 0.25*sin(yTheta);
@@ -89,7 +87,7 @@ function xyTranslate(datapoints, containerAlpha, xTheta, yTheta)
                 datapoints(i,1) = datapoints(i,1) + xTranslate;
                 datapoints(i,2) = datapoints(i,2) + yTranslate;
         end
-        pointCheck = inShape(containerAlpha, datapoints);
+        pointCheck = ~inShape(containerAlpha, datapoints);
         if sum(pointCheck) > 0
             for i = 1:length(datapoints(:,1))
                 datapoints(i,1) = datapoints(i,1) - xTranslate;
@@ -98,7 +96,7 @@ function xyTranslate(datapoints, containerAlpha, xTheta, yTheta)
             disp("Translation done")
             break
         end
-        step = step + 1
     end
+    x = datapoints;
 end
 

@@ -21,7 +21,7 @@ Overview: Repoistory for code processing binary images into .stl files of concre
         + (Optional) Meshmixer
 
 2. Main Folder: Current working directory
-    Current pipeline:
+    *Current pipeline:
         1. reducemesh.m
         2. cubelets.m
         3. insertAgg.m

@@ -22,7 +22,7 @@ Overview: Repoistory for code processing binary images into .stl files of concre
 
 2. Main Folder: Current working directory
     1. Current pipeline:
-        1. reducemesh.m
+        1. reducemesh.m (stlVolume.m is a dependency)
         2. cubelets.m
         3. insertAgg.m
         4. growAgg.m

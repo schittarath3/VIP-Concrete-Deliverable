@@ -15,27 +15,30 @@ function insertRepo = insertAgg(aggRepo, cubesCell, scaleFactor, numOrientations
     insertRepo = struct;
     if numSlots == totalNumAgg
         for i = 1:numAggs %Rescaling points by scaleFactor
+            aggRandNum = aggRandIndex(i);
             oriRandIndex = randperm(totalOrientations, numOrientations);
             for x = 1:numOrientations
                 oriName = orientationNames{oriRandIndex(x)};
-                newName = strcat(aggNames{i}, oriName);
+                newName = strcat(aggNames{aggRandNum}, oriName);
                 insertRepo.(newName).Points ...
-                    = aggRepo.(aggNames{i}).Orientation.(oriName) * scaleMat;
+                    = aggRepo.(aggNames{aggRandNum}).Orientation.(oriName) * scaleMat;
+                insertRepo.(newName).Faces = aggRepo.(aggNames{aggRandNum}).Faces;
             end
         end
         
         newAggName = fieldnames(insertRepo);
         for i = 1:totalNumAgg %associate each aggregate in aggRepo to a cube in cubeCell
-            curAggName = newAggName{i}
+            curAggName = newAggName{i};
             cubeNum = cubeRandIndex(i);
             cubelet = cubesCell{cubeNum};
             cubeAlpha = alphaShape(cubelet);
             insertRepo.(curAggName).cubeNum = cubeNum;
-            cubeCentroid = getCentroid(cubelet)
+            cubeCentroid = getCentroid(cubelet);
             insertRepo.(curAggName).Points ... 
                 = normalize(insertRepo.(curAggName).Points, cubeCentroid);
             pointCheck = ~inShape(cubeAlpha, insertRepo.(curAggName).Points);
-            if pointCheck > 0
+            pointCheckSum = sum(pointCheck, 'all');
+            if pointCheckSum > 0
                 disp("Aggregate " + currAggName +...
                      " does not fit within mini cube. Try decreasing the scaling factor.")
                 break

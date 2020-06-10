@@ -20,7 +20,9 @@ Overview: Repoistory for code processing binary images into .stl files of concre
         + Fiji- ImageJ distribution with many plugins for scientific analysis
         + (Optional) Meshmixer
 
-2. Main Folder: Current working directory
+2. STL Files Folder: Files for aggregate and box meshes
+
+3. Main Folder: Current working directory
     1. Current pipeline:
         1. reducemesh.m (stlVolume.m is a dependency)
         2. cubelets.m

@@ -31,12 +31,12 @@ function insertRepo = insertAgg(aggRepo, cubesCell, scaleFactor, numOrientations
             cubelet = cubesCell{cubeNum};
             cubeAlpha = alphaShape(cubelet);
             insertRepo.(curAggName).cubeNum = cubeNum;
-            cubeCentroid = getCentroid(cubelet);
+            cubeCentroid = getCentroid(cubelet)
             insertRepo.(curAggName).Points ... 
                 = normalize(insertRepo.(curAggName).Points, cubeCentroid);
             pointCheck = ~inShape(cubeAlpha, insertRepo.(curAggName).Points);
             if pointCheck > 0
-                disp("Aggregate " + aggName + curOriName +...
+                disp("Aggregate " + currAggName +...
                      " does not fit within mini cube. Try decreasing the scaling factor.")
                 break
             else

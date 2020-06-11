@@ -1,4 +1,11 @@
-function tangentPlane(filename,restrictface)
+function TPlane = tangentPlane(filename,restrictface)
+%Input: filename - the stl file of the aggregate
+%           restrictface - the section of the aggregate to generate the
+%           tangent plane (1 - bottom left, 2 - bottom right, 3 - top left,
+%           4 - top right) 
+%Output: the goal of this function is to generate a visual representation
+%of the tangent plane along with the plane equation in the form of Ax + By
+%+ Cz + D = 0 (written as coefficients).
 pts1 = normalize(stlread(filename).Points);
 
 %generating the tangent line of the top...
@@ -113,6 +120,8 @@ Z = -1/Normvec(3)*(Normvec(1)*X + Normvec(2)*Y + D);
 surf(X,Y,Z,'FaceColor','w');
 hold off
 axis equal
+
+TPlane = [Normvec(1), Normvec(2), Normvec(3), D];
 end
 
 function datapointsn = normalize(datapoints)

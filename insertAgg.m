@@ -39,7 +39,7 @@ function insertRepo = insertAgg(aggRepo, cubesCell, scaleFactor, numOrientations
             pointCheck = ~inShape(cubeAlpha, insertRepo.(curAggName).Points);
             pointCheckSum = sum(pointCheck, 'all');
             if pointCheckSum > 0
-                disp("Aggregate " + currAggName +...
+                disp("Aggregate " + curAggName +...
                      " does not fit within mini cube. Try decreasing the scaling factor.")
                 break
             else

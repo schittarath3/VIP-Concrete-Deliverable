@@ -1,44 +1,62 @@
 function insertRepo = insertAgg(aggRepo, cubesCell, scaleFactor, numOrientations)
+%Inserts aggergates into predefined cubes at the cube's centroid
+%Inputs: 
+%   aggRepo: Struct of aggregates in form (aggregateName-Faces,Orientations->orientations) 
+%   cubesCell: Cell of cube vertice points
+%   scaleFactor: A scaling factor for all aggregates recommended <0.01
+%   numOrientations: The number of orientations that are allowed
+%Ouput: 
+%   insertRepo: Struct of aggregates in form
+%   (aggregateName->Points,Faces,cubeNum). The number of aggregates is
+%   number of aggregates * numOrientations
 
     %setting up constants
-    numSlots = length(cubesCell);
-    numAggs = length(fieldnames(aggRepo));
-    totalNumAgg = numAggs * numOrientations;
-    scaleMat = [scaleFactor 0 0; 0 scaleFactor 0; 0 0 scaleFactor];
+    numSlots = length(cubesCell); %number of available slots
+    numAggs = length(fieldnames(aggRepo)); %number of aggregates
+    totalNumAgg = numAggs * numOrientations; %total number of possible new aggregates
+    scaleMat = [scaleFactor 0 0; 0 scaleFactor 0; 0 0 scaleFactor]; %scaling matrix
     
+    %more constants
     cubeRandIndex = randperm(numSlots); %psuedorandom array to index cubes
     aggRandIndex = randperm(numAggs); %psuedorandom array to index aggregates
-    aggNames = fieldnames(aggRepo);
-    orientationNames = fieldnames(aggRepo.(aggNames{1}).Orientation);
+    aggNames = fieldnames(aggRepo); %names of aggregates in AggRepo
+    orientationNames = fieldnames(aggRepo.(aggNames{1}).Orientation); %names of orientations
     totalOrientations = length(orientationNames);
     
+    %creates new struct
     insertRepo = struct;
     if numSlots == totalNumAgg
         for i = 1:numAggs %Rescaling points by scaleFactor
-            aggRandNum = aggRandIndex(i);
-            oriRandIndex = randperm(totalOrientations, numOrientations);
+            aggRandNum = aggRandIndex(i); %getting random aggregate
+            oriRandIndex = randperm(totalOrientations, numOrientations); %fetching random orientation
+            
+            %stores aggregates with orientation name
+            %scaling aggregates
             for x = 1:numOrientations
                 oriName = orientationNames{oriRandIndex(x)};
                 newName = strcat(aggNames{aggRandNum}, oriName);
-                insertRepo.(newName).Points ...
+                insertRepo.(newName).Points ... 
                     = aggRepo.(aggNames{aggRandNum}).Orientation.(oriName) * scaleMat;
                 insertRepo.(newName).Faces = aggRepo.(aggNames{aggRandNum}).Faces;
+            
             end
         end
         
-        newAggName = fieldnames(insertRepo);
+        newAggName = fieldnames(insertRepo); %get new aggregate names
+        
         for i = 1:totalNumAgg %associate each aggregate in aggRepo to a cube in cubeCell
-            curAggName = newAggName{i};
-            cubeNum = cubeRandIndex(i);
-            cubelet = cubesCell{cubeNum};
+            curAggName = newAggName{i}; 
+            cubeNum = cubeRandIndex(i); 
+            cubelet = cubesCell{cubeNum}; %gets random cube point
             cubeAlpha = alphaShape(cubelet);
-            insertRepo.(curAggName).cubeNum = cubeNum;
+            
+            insertRepo.(curAggName).cubeNum = cubeNum; %associate aggregate with cubeNum
             cubeCentroid = getCentroid(cubelet);
-            insertRepo.(curAggName).Points ... 
+            insertRepo.(curAggName).Points ... %normalize aggregate centroid to cube centroid
                 = normalize(insertRepo.(curAggName).Points, cubeCentroid);
             pointCheck = ~inShape(cubeAlpha, insertRepo.(curAggName).Points);
             pointCheckSum = sum(pointCheck, 'all');
-            if pointCheckSum > 0
+            if pointCheckSum > 0 %checks if any aggregate points are outside the cube
                 disp("Aggregate " + curAggName +...
                      " does not fit within mini cube. Try decreasing the scaling factor.")
                 break

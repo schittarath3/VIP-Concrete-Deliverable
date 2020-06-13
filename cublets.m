@@ -1,6 +1,6 @@
 startCoords = [1 1 1];
-cubeSize = 18;
-nDivisions = 3;
+cubeSize = 160;
+nDivisions = 4;
 testCubes = genCublets(cubeSize, nDivisions, startCoords, 1);
 newCubeSize = cubeSize - (cubeSize/nDivisions);
 newNDivisions = nDivisions - 1;

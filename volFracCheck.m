@@ -8,6 +8,7 @@ function volFract = volFracCheck(aggRepo, cubeLength)
     cubeVol = cubeLength^3; %Volume of cube
     aggNames = fieldnames(aggRepo);
     numAgg = length(aggNames);
+    totalAggVol = 0;
     for i = 1:numAgg %Adds the volume of aggregate alphashapes
         curAgg = aggRepo.(aggNames{i}).Points;
         aggAlpha = alphaShape(curAgg);

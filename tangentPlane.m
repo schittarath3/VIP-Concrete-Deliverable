@@ -1,4 +1,3 @@
-tangentPlane.m
 clc
 clear
 
@@ -42,27 +41,26 @@ result = acos(dot(normvec1(1:3),normvec2(1:3))./(magNormVec1.*magNormVec2));
 end
 
 function result = tangentPlane(filename,option,angle,figurecheck)
-switch option
-    case 1 %LEFT
-        split1 = 1; %axis where the aggregate is cut into halves
-        split2 = 3; %axis where the aggregate is cut into halves again
-        split3 = 2;
-        restrictface = 1;
-    case 2 %RIGHT
-        split1 = 1;
-        split2 = 3;
-        split3 = 2;
-        restrictface = 4;
-    case 3 %BOTTOM
-        split1 = 3;
-        split2 = 2;
-        split3 = 1;
-        restrictface = 2;
-    case 4 %TOP
-        split1 = 3;
-        split2 = 2;
-        split3 = 1;
-        restrictface = 4;
+if contains(option,'left')
+    split1 = 1; %axis where the aggregate is cut into halves
+    split2 = 3; %axis where the aggregate is cut into halves again
+    split3 = 2;
+    restrictface = 1;
+elseif contains(option,'right')
+    split1 = 1;
+    split2 = 3;
+    split3 = 2;
+    restrictface = 4;
+elseif contains(option,'bottom')
+    split1 = 3;
+    split2 = 2;
+    split3 = 1;
+    restrictface = 1;
+elseif contains(option,'top')
+    split1 = 3;
+    split2 = 2;
+    split3 = 1;
+    restrictface = 4;
 end
 
 pts1 = normalize(stlread(filename).Points);
@@ -223,15 +221,14 @@ end
 end
 
 function datapointsn = Translate(datapoints1,datapoints2,Normvec,option)
-switch option
-    case 1
-        scalar = -1;
-    case 2
-        scalar = 1;
-    case 3
-        scalar = 1;
-    case 4
-        scalar = -1;
+if contains(option,'left')
+    scalar = -1;
+elseif contains(option,'right')
+    scalar = 1;
+elseif contains(option,'bottom')
+    scalar = -1;
+elseif contains(option,'top')
+    scalar = 1;
 end
 
 agg2 = alphaShape(datapoints2); %stationary

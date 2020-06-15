@@ -1,7 +1,7 @@
 clc 
 clear
 
-fileList = dir('STL Files\Aggregate Test\*.stl');
+fileList = dir('STL Files\Aggregates Processed 3\*.stl');
 samples = size(fileList);
 for ag = 1:samples
     try

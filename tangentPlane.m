@@ -83,6 +83,16 @@ elseif contains(option,'top')
     split2 = 2;
     split3 = 1;
     restrictface = 4;
+elseif contains(option,'front')
+    split1 = 2;
+    split2 = 3;
+    split3 = 1;
+    restrictface = 2;
+elseif contains (option, 'back')
+    split1 = 2;
+    split2 = 3;
+    split3 = 1;
+    restrictface = 3;
 end
 
 pts1 = normalize(stlread(filename).Points);
@@ -243,13 +253,17 @@ end
 end
 
 function datapointsn = Translate(datapoints1,datapoints2,Normvec,option)
-if contains(option,'left') 
+if contains(option,'left')
     scalar = -1;
 elseif contains(option,'right')
     scalar = 1;
 elseif contains(option,'bottom')
     scalar = -1;
 elseif contains(option,'top')
+    scalar = 1;
+elseif contains(option,'front')
+    scalar = -1; 
+elseif contains(option,'back')
     scalar = 1;
 end
 

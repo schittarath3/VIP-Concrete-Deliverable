@@ -1,13 +1,13 @@
 startCoords = [1 1 1];
-cubeSize = 160;
-nDivisions = 4;
+cubeSize = 150;
+nDivisions = 3;
 testCubes = genCublets(cubeSize, nDivisions, startCoords, 1);
-newCubeSize = cubeSize - (cubeSize/nDivisions);
-newNDivisions = nDivisions - 1;
-a = (cubeSize/nDivisions)/2;
-newStartCoords = [a a a];
-moreCubes = genCublets(newCubeSize, newNDivisions, newStartCoords, 2);
-testCubes = vertcat(testCubes, moreCubes);
+% newCubeSize = cubeSize - (cubeSize/nDivisions);
+% newNDivisions = nDivisions - 1;
+% a = (cubeSize/nDivisions)/2;
+% newStartCoords = [a a a];
+% moreCubes = genCublets(newCubeSize, newNDivisions, newStartCoords, 2);
+% testCubes = vertcat(testCubes, moreCubes);
 
 function cubeCoords = genCublets(cubeSize, nDivisions, startCoords, iteration)
 %Generates a n*n*n size (n=cubeLength) cube with x (x=nDivisions) divisions

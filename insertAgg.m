@@ -17,7 +17,6 @@ function insertRepo = insertAgg(aggRepo, cubesCell, scaleFactor, numOrientations
     scaleMat = [scaleFactor 0 0; 0 scaleFactor 0; 0 0 scaleFactor]; %scaling matrix
     
     %more constants
-    cubeRandIndex = randperm(numSlots); %psuedorandom array to index cubes
     aggRandIndex = randperm(numAggs); %psuedorandom array to index aggregates
     aggNames = fieldnames(aggRepo); %names of aggregates in AggRepo
     orientationNames = fieldnames(aggRepo.(aggNames{1}).Orientation); %names of orientations
@@ -34,7 +33,15 @@ function insertRepo = insertAgg(aggRepo, cubesCell, scaleFactor, numOrientations
             %scaling aggregates
             for x = 1:numOrientations
                 oriName = orientationNames{oriRandIndex(x)};
-                newName = strcat(aggNames{aggRandNum}, oriName);
+                newName = strcat(aggNames{aggRandNum}, num2str(i));
+                
+                %Create index for orientation
+                oriX = str2num(oriName(8));
+                oriY = str2num(oriName(16));
+                oriZ = str2num(oriName(24));
+                oriMat = [oriX oriY oriZ];
+                
+                insertRepo.(newName).Orientation = oriMat;
                 insertRepo.(newName).Points ... 
                     = aggRepo.(aggNames{aggRandNum}).Orientation.(oriName) * scaleMat;
                 insertRepo.(newName).Faces = aggRepo.(aggNames{aggRandNum}).Faces;
@@ -46,7 +53,7 @@ function insertRepo = insertAgg(aggRepo, cubesCell, scaleFactor, numOrientations
         
         for i = 1:totalNumAgg %associate each aggregate in aggRepo to a cube in cubeCell
             curAggName = newAggName{i}; 
-            cubeNum = cubeRandIndex(i); 
+            cubeNum = i;
             cubelet = cubesCell{cubeNum}; %gets random cube point
             cubeAlpha = alphaShape(cubelet);
             

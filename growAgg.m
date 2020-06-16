@@ -21,6 +21,7 @@ function newRepo = growAgg(aggRepo, cubeCell, scaleStepFactor)
         curAggName = aggNames{i};
         curCubeNum = aggRepo.(curAggName).cubeNum;
         
+        newRepo.(curAggName).Orientation = aggRepo.(curAggName).Orientation; %Store orientation
         newRepo.(curAggName).cubeNum = curCubeNum; %store cubeNum to new repo
         newRepo.(curAggName).Faces = aggRepo.(curAggName).Faces; %store connectivity
         

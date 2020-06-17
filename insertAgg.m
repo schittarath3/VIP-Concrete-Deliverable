@@ -25,6 +25,7 @@ function insertRepo = insertAgg(aggRepo, cubesCell, scaleFactor, numOrientations
     %creates new struct
     insertRepo = struct;
     if numSlots == totalNumAgg
+        cubeInd = 1;
         for i = 1:numAggs %Rescaling points by scaleFactor
             aggRandNum = aggRandIndex(i); %getting random aggregate
             oriRandIndex = randperm(totalOrientations, numOrientations); %fetching random orientation
@@ -41,23 +42,26 @@ function insertRepo = insertAgg(aggRepo, cubesCell, scaleFactor, numOrientations
                 oriZ = str2num(oriName(24));
                 oriMat = [oriX oriY oriZ];
                 
-                insertRepo.(newName).Orientation = oriMat;
+                insertRepo.(newName).Original = aggNames{aggRandNum}; %Store original number
+                insertRepo.(newName).cubeNum = cubeInd; %associate aggregate with cubeNum
+                cubeInd = cubeInd + 1;
+                insertRepo.(newName).Orientation = oriMat; %Indices for linspace
                 insertRepo.(newName).Points ... 
-                    = aggRepo.(aggNames{aggRandNum}).Orientation.(oriName) * scaleMat;
-                insertRepo.(newName).Faces = aggRepo.(aggNames{aggRandNum}).Faces;
+                    = aggRepo.(aggNames{aggRandNum}).Orientation.(oriName) * scaleMat; %Scale down points
+                insertRepo.(newName).Faces = aggRepo.(aggNames{aggRandNum}).Faces; %Store connectivity
             
             end
         end
         
         newAggName = fieldnames(insertRepo); %get new aggregate names
+        newRanInd = randperm(length(newAggName));
         
         for i = 1:totalNumAgg %associate each aggregate in aggRepo to a cube in cubeCell
-            curAggName = newAggName{i}; 
-            cubeNum = i;
+            curAggName = newAggName{newRanInd(i)}; 
+            cubeNum = insertRepo.(curAggName).cubeNum;
             cubelet = cubesCell{cubeNum}; %gets random cube point
             cubeAlpha = alphaShape(cubelet);
             
-            insertRepo.(curAggName).cubeNum = cubeNum; %associate aggregate with cubeNum
             cubeCentroid = getCentroid(cubelet);
             insertRepo.(curAggName).Points ... %normalize aggregate centroid to cube centroid
                 = normalize(insertRepo.(curAggName).Points, cubeCentroid);

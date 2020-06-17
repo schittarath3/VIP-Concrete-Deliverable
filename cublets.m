@@ -57,5 +57,5 @@ for x = 1:nDivisionsA
     end
 end
 
-cubeCoords = preCell
+cubeCoords = preCell;
 end

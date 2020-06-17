@@ -14,13 +14,14 @@ function newRepo = growAgg(aggRepo, cubeCell, scaleStepFactor)
     scaleUp= [scaleStepFactor 0 0 ;0 scaleStepFactor 0; 0 0 scaleStepFactor];
     scaleDown =[1/scaleStepFactor 0 0 ;0 1/scaleStepFactor 0; 0 0 1/scaleStepFactor];
     
-    newRepo = struct %create new struct to store new points
+    newRepo = struct; %create new struct to store new points
     for i = 1:numAgg %iterates through aggRepo 
         
         %setting up variables
         curAggName = aggNames{i};
         curCubeNum = aggRepo.(curAggName).cubeNum;
         
+        newRepo.(curAggName).Original = aggRepo.(curAggName).Original; %Store original name
         newRepo.(curAggName).Orientation = aggRepo.(curAggName).Orientation; %Store orientation
         newRepo.(curAggName).cubeNum = curCubeNum; %store cubeNum to new repo
         newRepo.(curAggName).Faces = aggRepo.(curAggName).Faces; %store connectivity

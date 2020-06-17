@@ -1,9 +1,8 @@
 clc 
 clear
 
-fileList = dir('STL Files\Aggregate Test\*.stl');
-samples = size(fileList);
-for ag = 1:samples
+fileList = dir('STL Files\Aggregates Processed 3\*.stl');
+for ag = 1:27
     try
     filename = fileList(ag,1).name;
     folderName = fileList(ag,1).folder;

@@ -34,7 +34,7 @@ function insertRepo = insertAgg(aggRepo, cubesCell, scaleFactor, numOrientations
             %scaling aggregates
             for x = 1:numOrientations
                 oriName = orientationNames{oriRandIndex(x)};
-                newName = strcat(aggNames{aggRandNum}, num2str(i));
+                newName = strcat('ag', num2str(i), num2str(x));
                 
                 %Create index for orientation
                 oriX = str2num(oriName(8));
@@ -54,7 +54,7 @@ function insertRepo = insertAgg(aggRepo, cubesCell, scaleFactor, numOrientations
         end
         
         newAggName = fieldnames(insertRepo); %get new aggregate names
-        newRanInd = randperm(length(newAggName));
+        newRanInd = randperm(totalNumAgg);
         
         for i = 1:totalNumAgg %associate each aggregate in aggRepo to a cube in cubeCell
             curAggName = newAggName{newRanInd(i)}; 

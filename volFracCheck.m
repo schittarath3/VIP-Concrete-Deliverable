@@ -1,3 +1,4 @@
+%find min and maxes and make a new bounding box
 function volumeFrac = volFracCheck(aggRepo, cubeLength)
 %Gets volume fraction of aggregate within the cube
 %Inputs: 

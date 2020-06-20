@@ -2,7 +2,7 @@ clc
 clear
 
 fileList = dir('STL Files\Aggregates Processed 3\*.stl');
-for ag = 1:length(fileList)
+for ag = 1:9
     try
     filename = fileList(ag,1).name;
     folderName = fileList(ag,1).folder;
@@ -44,16 +44,16 @@ end
 
 startCoords = [1 1 1];
 cubeSize = 561;
-nDivisions = 4;
+nDivisions = 3;
 testCubes = genCublets(cubeSize, nDivisions, startCoords, 1);
-newCubeSize = cubeSize - (cubeSize/nDivisions);
-newNDivisions = nDivisions - 1;
-a = (cubeSize/nDivisions)/2;
-newStartCoords = [a a a];
-moreCubes = genCublets(newCubeSize, newNDivisions, newStartCoords, 2);
-testCubes = vertcat(testCubes, moreCubes);
+% newCubeSize = cubeSize - (cubeSize/nDivisions);
+% newNDivisions = nDivisions - 1;
+% a = (cubeSize/nDivisions)/2;
+% newStartCoords = [a a a];
+% moreCubes = genCublets(newCubeSize, newNDivisions, newStartCoords, 2);
+% testCubes = vertcat(testCubes, moreCubes);
 
-aggRepo = insertAgg(repos, testCubes, 1, 7);
+aggRepo = insertAgg(repos, testCubes, 1, 3);
 % myRepo = growAgg(aggRepo, testCubes, 1.005);
 
 %% Functions

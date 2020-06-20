@@ -1,4 +1,5 @@
 function newRepo = translateToPoint(aggRepo, stepSize, point)
+tic
 %Translates all aggregates to defined point and checks for overlaps
 %Inputs:
 %   aggRepo: struct of aggregates with form of at least aggName->Points
@@ -48,6 +49,9 @@ function newRepo = translateToPoint(aggRepo, stepSize, point)
             if curDist < minDist
                 curDist = minDist;
             end
+            if curDist >= maxDist
+                curDist = maxDist - 1;
+            end
             normScale = distNorm(maxDist, minDist, curDist);
             newCent = curCent + ((point - curCent) * stepSize * normScale);
             curAggPoints = normalizeTo(curAggPoints, newCent);
@@ -76,6 +80,7 @@ function newRepo = translateToPoint(aggRepo, stepSize, point)
             end
         end
     end
+    toc
 end
 
 function normScale = distNorm(max, min, curDistance)
@@ -86,8 +91,8 @@ function normScale = distNorm(max, min, curDistance)
 %   curDiostance: current distance of aggregate to point
 %Outputs:
 %   normScale: double [0,1]
-    normScale = (curDistance - min)/(max - min); 
-    normScale = 1 - normScale;
+    normScale = (curDistance - min)/(max - min);
+    normScale= 1 - normScale;
 end
 
 function distance = getDist(pointFinal, pointsAggCent)

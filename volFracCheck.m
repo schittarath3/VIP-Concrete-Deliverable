@@ -1,22 +1,65 @@
 %find min and maxes and make a new bounding box
-function volumeFrac = volFracCheck(aggRepo, cubeLength)
+function volumeFrac = volFracCheck(aggRepo)
 %Gets volume fraction of aggregate within the cube
 %Inputs: 
 %   aggRepo: Struct of aggregates of form aggName ->cubeNum,Faces,Points
 %   cubeLength: Length of cube
 %Outputs:
 %   Volume fraction of aggregates within cube as float value
-    cubeVol = cubeLength^3; %Volume of cube
     aggNames = fieldnames(aggRepo);
     numAgg = length(aggNames);
     totalAggVol = 0;
+    minX = 100000;
+    maxX = -100000;
+    minY = 100000;
+    maxY = -100000;
+    minZ = 100000;
+    maxZ = -100000;
     for i = 1:numAgg %calculate volume for each aggregate and totals
         p = aggRepo.(aggNames{i}).Points';
+       
+        curMinX = min([p(:,1)]);
+        if curMinX < minX
+            minX = curMinX;
+        end
+        
+        curMaxX = max([p(:,1)]);
+        if curMaxX > maxX
+            maxX = curMaxX;
+        end
+        
+        curMinY = min([p(:,2)]);
+        if curMinY < minY
+            minY = curMinY;
+        end
+        
+        curMaxY = max([p(:,2)]);
+        if curMaxY > maxY
+            maxY = curMaxY;
+        end
+        
+        curMinZ = min([p(:,1)]);
+        if curMinZ < minZ
+            minZ = curMinZ;
+        end
+        
+        curMaxZ = max([p(:,1)]);
+        if curMaxZ > maxZ
+            maxZ = curMaxZ;
+        end
+        
         f = aggRepo.(aggNames{i}).Faces';
         [volume, area] = stlVolume(p,f);
-        totalAggVol = totalAggVol + volume;
+        totalAggVol = totalAggVol + volume
     end
-    volumeFrac = -totalAggVol/cubeVol;
+    
+    xLen = maxX - minX;
+    yLen = maxY - minY;
+    zLen = maxZ - minZ;
+    
+    boundingVol = xLen * yLen * zLen;
+    
+    volumeFrac = -totalAggVol/boundingVol;
 end
 
 function [totalVolume,totalArea] = stlVolume(p,t)

@@ -1,10 +1,7 @@
-<<<<<<< HEAD:tangentPlane.m
-function VolFract = tangentPlane(repository)
 %% PACKING THE AGGREGATES
 %packAgg('repos.mat')
 
-function VolFract = packAgg(repository)
->>>>>>> 672214c2b80bb4a90915d9709a27dd429b8e7e7a:packAgg.m
+function VolFract = tangentPlane(repository)
 repos = load(repository);
 fields = fieldnames(repos.myRepo);
 angles = linspace(-pi/8,pi/8,5);
@@ -39,11 +36,11 @@ for col = 1:3
         cntn3 = stlread(strcat(repos.myRepo.(fields{ao(1)}).Original,'.stl')).ConnectivityList;
         
         rottop = optAngle(ptsn2,ptsn1,'bottom','top',2);
-            Normvec = tangentPlane(ptsn1,cntn1,'top',[0 rottop 0],false);
+            Normvec = tangentP(ptsn1,cntn1,'top',[0 rottop 0],false);
             newpts = [plotaggregate(ptsn1,ptsn2,cntn1,[0 rottop 0],Normvec,'top',false); ptsn2];
             
         rotbot = optAngle(ptsn2,ptsn3,'top','bottom',2);
-            Normvec = tangentPlane(ptsn3,cntn3,'bottom',[0 rotbot 0],false);
+            Normvec = tangentP(ptsn3,cntn3,'bottom',[0 rotbot 0],false);
             newpts = [plotaggregate(ptsn3,newpts,cntn3,[0 rotbot 0],Normvec,'bottom',false); newpts];
             
         plotaggregate(ptsn2,[],cntn2,[],[],[],true);
@@ -65,11 +62,11 @@ for layer = 1:3
     stackcn3 = aggStacksC.(strcat('stack',num2str(stackidx(1))));
     
     rotstack = optAngle(stack2,stack1,'right','left',2);
-    Normvec = tangentPlane(stack1,stack1,'left',[0 0 rotstack],false);
+    Normvec = tangentP(stack1,stack1,'left',[0 0 rotstack],false);
     newstack = [plotaggregate(stack1,stack2,stackcn1,[0 0 rotstack],Normvec,'left',false); stack2];
     
     rotstack = optAngle(stack2,stack3,'left','right',2);
-    Normvec = tangentPlane(stack1,stack1,'right',[0 0 rotstack],false);
+    Normvec = tangentP(stack1,stack1,'right',[0 0 rotstack],false);
     newstack = [plotaggregate(stack3,newstack,stackcn3,[0 0 rotstack],Normvec,'right',false); newstack];
     
     plotaggregate(stack2,[],stackcn2,[],[],[],true);
@@ -131,7 +128,7 @@ function result = optAngle(pts1,pts2,restrictface1,restrictface2,opt)
 %             agg2 - the aggregate that needs to be "attached"/shifted
 a = linspace(-pi/3,pi/3);
 optimalangle = [];
-plane1 = tangentPlane(pts1,[],restrictface1,[0 0 0],false);
+plane1 = tangentP(pts1,[],restrictface1,[0 0 0],false);
 
 parfor ang = 1:length(a)
     if opt == 2 %y-axis
@@ -139,7 +136,7 @@ parfor ang = 1:length(a)
     else 
         rots = [0, 0, a(ang)];
     end
-    plane2 = tangentPlane(pts2,[],restrictface2,rots,false);
+    plane2 = tangentP(pts2,[],restrictface2,rots,false);
     radt = anglebwPlanes(plane1,plane2);
     optimalangle = [optimalangle; radt];
 end
@@ -155,7 +152,7 @@ magNormVec2 = norm(normvec2(1:3));
 result = acos(dot(normvec1(1:3),normvec2(1:3))./(magNormVec1.*magNormVec2));
 end
 
-function result = tangentPlane(pts1,cnt1,option,angle,figurecheck)
+function result = tangentP(pts1,cnt1,option,angle,figurecheck)
 %restrictface 1,2 - negative, 3,4 - positive
 %restrictface 1,3 - negative to 0, 2,4 - 0 to positive
 

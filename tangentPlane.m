@@ -1,8 +1,8 @@
-clc
-clear
-
 %% PACKING THE AGGREGATES
-repos = load('repos.mat');
+tangentPlane('repos.mat')
+
+function VolFract = tangentPlane(repository)
+repos = load(repository);
 fields = fieldnames(repos.myRepo);
 angles = linspace(-pi/8,pi/8,5);
 
@@ -105,6 +105,7 @@ pts = stlread('packedagg.stl').Points;
 %volume of box
 Vol = (max(pts(:,1)) - min(pts(:,1)))*(max(pts(:,2)) - min(pts(:,2)))*(max(pts(:,3)) - min(pts(:,3)));
 VolFract = mv/Vol;
+end
 
 %% FUNCTION CODE
 function pts2 = plotaggregate(pts2,pts1,cnt2,rotangle,NormVec,option,figurecheck)

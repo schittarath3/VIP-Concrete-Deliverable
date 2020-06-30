@@ -1,4 +1,10 @@
+<<<<<<< HEAD:tangentPlane.m
 function VolFract = tangentPlane(repository)
+%% PACKING THE AGGREGATES
+%packAgg('repos.mat')
+
+function VolFract = packAgg(repository)
+>>>>>>> 672214c2b80bb4a90915d9709a27dd429b8e7e7a:packAgg.m
 repos = load(repository);
 fields = fieldnames(repos.myRepo);
 angles = linspace(-pi/8,pi/8,5);

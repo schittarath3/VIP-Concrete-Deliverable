@@ -1,6 +1,3 @@
-%% PACKING THE AGGREGATES
-tangentPlane('repos.mat')
-
 function VolFract = tangentPlane(repository)
 repos = load(repository);
 fields = fieldnames(repos.myRepo);

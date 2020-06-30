@@ -6,8 +6,10 @@ function volumeFrac = volFracCheck(aggRepo)
 %   cubeLength: Length of cube
 %Outputs:
 %   Volume fraction of aggregates within cube as float value
+
     aggNames = fieldnames(aggRepo);
     numAgg = length(aggNames);
+
     totalAggVol = 0;
     minX = 100000;
     maxX = -100000;
@@ -16,8 +18,10 @@ function volumeFrac = volFracCheck(aggRepo)
     minZ = 100000;
     maxZ = -100000;
     for i = 1:numAgg %calculate volume for each aggregate and totals
+
         p = aggRepo.(aggNames{i}).Points';
-       
+        f = aggRepo.(aggNames{i}).Faces';
+        
         curMinX = min([p(:,1)]);
         if curMinX < minX
             minX = curMinX;
@@ -47,10 +51,9 @@ function volumeFrac = volFracCheck(aggRepo)
         if curMaxZ > maxZ
             maxZ = curMaxZ;
         end
-        
-        f = aggRepo.(aggNames{i}).Faces';
+
         [volume, area] = stlVolume(p,f);
-        totalAggVol = totalAggVol + volume
+        totalAggVol = totalAggVol + volume;
     end
     
     xLen = maxX - minX;

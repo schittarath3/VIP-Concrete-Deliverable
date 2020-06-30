@@ -1,7 +1,8 @@
 clc
 clear
 
-repos = load('testingagg.mat');
+%% PACKING THE AGGREGATES
+repos = load('repos.mat');
 fields = fieldnames(repos.myRepo);
 angles = linspace(-pi/8,pi/8,5);
 
@@ -22,84 +23,90 @@ end
 for col = 1:3
     for agg = 1:3
         ao = order(1:3,agg,col);
-        ptsn1 = normalize(repos.myRepo.(fields{ao(3)}).Points);
-        ptsn2 = normalize(repos.myRepo.(fields{ao(2)}).Points);
-        ptsn3 = normalize(repos.myRepo.(fields{ao(1)}).Points);
+        ang = linspace(-pi/8,pi/8,5);
+        rot1 = repos.myRepo.(fields{ao(3)}).Orientation; 
+        rot2 = repos.myRepo.(fields{ao(2)}).Orientation;
+        rot3 = repos.myRepo.(fields{ao(1)}).Orientation;
+        ptsn1 = Rotate(normalize(stlread(strcat(repos.myRepo.(fields{ao(3)}).Original,'.stl')).Points),ang(rot1(1)),ang(rot1(2)),ang(rot1(3)));
+        ptsn2 = Rotate(normalize(stlread(strcat(repos.myRepo.(fields{ao(2)}).Original,'.stl')).Points),ang(rot2(1)),ang(rot2(2)),ang(rot2(3)));
+        ptsn3 = Rotate(normalize(stlread(strcat(repos.myRepo.(fields{ao(1)}).Original,'.stl')).Points),ang(rot3(1)),ang(rot3(2)),ang(rot3(3)));
         
-        cntn1 = repos.myRepo.(fields{ao(3)}).Faces;
-        cntn2 = repos.myRepo.(fields{ao(2)}).Faces;
-        cntn3 = repos.myRepo.(fields{ao(1)}).Faces;
+        cntn1 = stlread(strcat(repos.myRepo.(fields{ao(3)}).Original,'.stl')).ConnectivityList;
+        cntn2 = stlread(strcat(repos.myRepo.(fields{ao(2)}).Original,'.stl')).ConnectivityList;
+        cntn3 = stlread(strcat(repos.myRepo.(fields{ao(1)}).Original,'.stl')).ConnectivityList;
         
         rottop = optAngle(ptsn2,ptsn1,'bottom','top',2);
             Normvec = tangentPlane(ptsn1,cntn1,'top',[0 rottop 0],false);
-            newpts = [plotaggregate(ptsn1,ptsn2,cntn1,[0 rottop 0],Normvec,'top',true); ptsn2];
-            hold on
+            newpts = [plotaggregate(ptsn1,ptsn2,cntn1,[0 rottop 0],Normvec,'top',false); ptsn2];
             
         rotbot = optAngle(ptsn2,ptsn3,'top','bottom',2);
             Normvec = tangentPlane(ptsn3,cntn3,'bottom',[0 rotbot 0],false);
-            newpts = [plotaggregate(ptsn3,newpts,cntn3,[0 rotbot 0],Normvec,'bottom',true); newpts];
-            hold on
+            newpts = [plotaggregate(ptsn3,newpts,cntn3,[0 rotbot 0],Normvec,'bottom',false); newpts];
             
         plotaggregate(ptsn2,[],cntn2,[],[],[],true);
-            axis equal
-        hold off
         
-        aggStacks(:,:,ao(1)./3) = newpts;
-        aggCon(:,:,ao(1)./3) = [cntn3; cntn1+102; cntn2+102*2];
+        cntpts = [cntn3; cntn1+length(ptsn3); cntn2+length([ptsn1; ptsn3])];
+        aggStacks.(strcat('stack',num2str(ao(1)./3))) = newpts;
+        aggStacksC.(strcat('stack',num2str(ao(1)./3))) = cntpts;
     end
 end
 
 %generating each of the layers...
 for layer = 1:3
     stackidx = order(:,layer,1);
-    stack1 = aggStacks(:,:,stackidx(3)); stackcn1 = aggCon(:,:,stackidx(3));
-    stack2 = aggStacks(:,:,stackidx(2)); stackcn2 = aggCon(:,:,stackidx(2));
-    stack3 = aggStacks(:,:,stackidx(1)); stackcn3 = aggCon(:,:,stackidx(1));
+    stack1 = aggStacks.(strcat('stack',num2str(stackidx(3))));
+    stackcn1 = aggStacksC.(strcat('stack',num2str(stackidx(3))));
+    stack2 = aggStacks.(strcat('stack',num2str(stackidx(2))));
+    stackcn2 = aggStacksC.(strcat('stack',num2str(stackidx(2))));
+    stack3 = aggStacks.(strcat('stack',num2str(stackidx(1))));
+    stackcn3 = aggStacksC.(strcat('stack',num2str(stackidx(1))));
+    
     rotstack = optAngle(stack2,stack1,'right','left',2);
     Normvec = tangentPlane(stack1,stack1,'left',[0 0 rotstack],false);
-    figure(1)
-    newstack = [plotaggregate(stack1,stack2,stackcn1,[0 0 rotstack],Normvec,'left',true); stack2];
-    hold on
+    newstack = [plotaggregate(stack1,stack2,stackcn1,[0 0 rotstack],Normvec,'left',false); stack2];
+    
     rotstack = optAngle(stack2,stack3,'left','right',2);
     Normvec = tangentPlane(stack1,stack1,'right',[0 0 rotstack],false);
-    newstack = [plotaggregate(stack3,newstack,stackcn3,[0 0 rotstack],Normvec,'right',true); newstack];
-    hold on
-    plotaggregate(stack2,[],stackcn2,[],[],[],true);
-    axis equal 
-    hold off
+    newstack = [plotaggregate(stack3,newstack,stackcn3,[0 0 rotstack],Normvec,'right',false); newstack];
     
-    aggLayer(:,:,layer) = newstack;
-    aggLayCon(:,:,layer) = [stackcn3; stackcn1+306; stackcn2+306.*2];
+    plotaggregate(stack2,[],stackcn2,[],[],[],true);
+    
+    cntpts = [stackcn3; stackcn1+length(stack3); stackcn2+length([stack1; stack3])];
+    aggLayer.(strcat('layer',num2str(layer))) = newstack;
+    aggLayerC.(strcat('layer',num2str(layer))) = cntpts;
 end
 
-%generating the entire cube...
-figure(1)
 for cube = 1:3
-    layer1 = aggLayer(:,:,1); layercn1 = aggLayCon(:,:,1);
-    layer2 = aggLayer(:,:,2); layercn2 = aggLayCon(:,:,2);
-    layer3 = aggLayer(:,:,3); layercn3 = aggLayCon(:,:,3);
-    cubestack = [plotaggregate(layer1,layer2,layercn1,[0 0 0],Normvec,'front',true); layer2];
+    layer1 = aggLayer.(strcat('layer','3')); layercn1 = aggLayerC.(strcat('layer','3'));
+    layer2 = aggLayer.(strcat('layer','2')); layercn2 = aggLayerC.(strcat('layer','2'));
+    layer3 = aggLayer.(strcat('layer','1')); layercn3 = aggLayerC.(strcat('layer','1'));
+    figure(1)
+    aggCube = [plotaggregate(layer1,layer2,layercn1,[0 0 0],Normvec,'front',true); layer2];
     hold on
-    cubestack = [plotaggregate(layer3,cubestack,layercn3,[0 0 0],Normvec,'back',true);cubestack];
+    aggCube = [plotaggregate(layer3,aggCube,layercn3,[0 0 0],Normvec,'back',true);aggCube];
     hold on
     plotaggregate(layer2,[],layercn2,[],[],[],true);
     axis equal
     hold off
+    
+    aggCubeC = [layercn3; layercn1+length(layer3); layercn2+length([layer1; layer3])];
 end
 
-function result = sortAgg(aggregates)
-%find the first aggregate in the center of the cube and use this as the
-%origin to compare it with other cubes...
+%VolumeCheck
+TR = triangulation(aggCubeC,aggCube);
+stlwrite(TR,'packedagg.stl')
 
-%translate each of the other cubes around that cube at the origin and store
-%the coordinates and perform an overlap check using alphashapes  along with
-%the number that each of the aggregates belong to. if there is an overlap,
-%shift the aggregate slightly back to the center of its cube and continue
-%until the overlap is done.
+model = createpde;
+importGeometry(model,'packedagg.stl');
+mesh = generateMesh(model);
+mv = volume(mesh);
 
-%continue for the rest of the cubes...
-end
+pts = stlread('packedagg.stl').Points;
+%volume of box
+Vol = (max(pts(:,1)) - min(pts(:,1)))*(max(pts(:,2)) - min(pts(:,2)))*(max(pts(:,3)) - min(pts(:,3)));
+VolFract = mv/Vol;
 
+%% FUNCTION CODE
 function pts2 = plotaggregate(pts2,pts1,cnt2,rotangle,NormVec,option,figurecheck)
 if ~isempty(rotangle)
 pts2 = Rotate(pts2,angle(1),angle(2),angle(3));

@@ -23,6 +23,8 @@ for ag = 1:9
     [V, nf, nv] = Volume(pts,cnt,Vmesh,fileLoc,false);
     repos.(filename(1:end-4)).Vertices = nv;
     repos.(filename(1:end-4)).Faces = nf;
+    repos.(filename(1:end-4)).OriginalPoints = pts;
+    repos.(filename(1:end-4)).OriginalFaces = agg.ConnectivityList;
     
     %rotating each of the aggregates for a set orientation...
     angles = linspace(-pi/8,pi/8,5);

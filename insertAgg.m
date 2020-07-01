@@ -44,6 +44,8 @@ function insertRepo = insertAgg(aggRepo, cubesCell, scaleFactor, numOrientations
                 
                 insertRepo.(newName).Original = aggNames{aggRandNum}; %Store original number
                 insertRepo.(newName).cubeNum = cubeInd; %associate aggregate with cubeNum
+                insertRepo.(newName).OriginalPoints = aggRepo.(aggNames{aggRandNum}).OriginalPoints;
+                insertRepo.(newName).OriginalFaces = aggRepo.(aggNames{aggRandNum}).OriginalFaces;
                 cubeInd = cubeInd + 1;
                 insertRepo.(newName).Orientation = oriMat; %Indices for linspace
                 insertRepo.(newName).Points ... 

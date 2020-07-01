@@ -1,12 +1,7 @@
 %% PACKING THE AGGREGATES
-
-tangentPlan('repos.mat')
-
-function VolFract = tangentPlan(repository)
-repos = load(repository);
-repos = repos.repos;
-fields = fieldnames(repos.myRepo);
-angles = linspace(-pi/8,pi/8,5);
+function VolFract = tangentPlane(repository)
+repos = load(repository); 
+fields = fieldnames(repos.aggRepo);
 
 %create a matrix to index each of the aggregate...
 order = ones(3,3);
@@ -26,16 +21,18 @@ for col = 1:3
     for agg = 1:3
         ao = order(1:3,agg,col);
         ang = linspace(-pi/8,pi/8,5);
-        rot1 = repos.myRepo.(fields{ao(3)}).Orientation; 
-        rot2 = repos.myRepo.(fields{ao(2)}).Orientation;
-        rot3 = repos.myRepo.(fields{ao(1)}).Orientation;
-        ptsn1 = Rotate(normalize(stlread(strcat(repos.myRepo.(fields{ao(3)}).Original,'.stl')).Points),ang(rot1(1)),ang(rot1(2)),ang(rot1(3)));
-        ptsn2 = Rotate(normalize(stlread(strcat(repos.myRepo.(fields{ao(2)}).Original,'.stl')).Points),ang(rot2(1)),ang(rot2(2)),ang(rot2(3)));
-        ptsn3 = Rotate(normalize(stlread(strcat(repos.myRepo.(fields{ao(1)}).Original,'.stl')).Points),ang(rot3(1)),ang(rot3(2)),ang(rot3(3)));
         
-        cntn1 = stlread(strcat(repos.myRepo.(fields{ao(3)}).Original,'.stl')).ConnectivityList;
-        cntn2 = stlread(strcat(repos.myRepo.(fields{ao(2)}).Original,'.stl')).ConnectivityList;
-        cntn3 = stlread(strcat(repos.myRepo.(fields{ao(1)}).Original,'.stl')).ConnectivityList;
+        rot1 = repos.aggRepo.(fields{ao(3)}).Orientation; 
+        rot2 = repos.aggRepo.(fields{ao(2)}).Orientation; 
+        rot3 = repos.aggRepo.(fields{ao(1)}).Orientation; 
+
+        ptsn1 = Rotate(normalize(repos.aggRepo.(fields{ao(3)}).OriginalPoints),ang(rot3(1)),ang(rot3(2)),ang(rot3(3)));
+        ptsn2 = Rotate(normalize(repos.aggRepo.(fields{ao(2)}).OriginalPoints),ang(rot2(1)),ang(rot2(2)),ang(rot2(3)));
+        ptsn3 =Rotate(normalize(repos.aggRepo.(fields{ao(1)}).OriginalPoints),ang(rot1(1)),ang(rot1(2)),ang(rot1(3)));
+        
+        cntn1 = repos.aggRepo.(fields{ao(3)}).OriginalFaces;
+        cntn2 = repos.aggRepo.(fields{ao(2)}).OriginalFaces;
+        cntn3 = repos.aggRepo.(fields{ao(1)}).OriginalFaces;
         
         rottop = optAngle(ptsn2,ptsn1,'bottom','top',2);
             Normvec = tangentP(ptsn1,cntn1,'top',[0 rottop 0],false);
@@ -45,7 +42,7 @@ for col = 1:3
             Normvec = tangentP(ptsn3,cntn3,'bottom',[0 rotbot 0],false);
             newpts = [plotaggregate(ptsn3,newpts,cntn3,[0 rotbot 0],Normvec,'bottom',false); newpts];
             
-        plotaggregate(ptsn2,[],cntn2,[],[],[],true);
+        plotaggregate(ptsn2,[],cntn2,[],[],[],false);
         
         cntpts = [cntn3; cntn1+length(ptsn3); cntn2+length([ptsn1; ptsn3])];
         aggStacks.(strcat('stack',num2str(ao(1)./3))) = newpts;
@@ -78,25 +75,23 @@ for layer = 1:3
     aggLayerC.(strcat('layer',num2str(layer))) = cntpts;
 end
 
-for cube = 1:3
-    layer1 = aggLayer.(strcat('layer','3')); layercn1 = aggLayerC.(strcat('layer','3'));
-    layer2 = aggLayer.(strcat('layer','2')); layercn2 = aggLayerC.(strcat('layer','2'));
-    layer3 = aggLayer.(strcat('layer','1')); layercn3 = aggLayerC.(strcat('layer','1'));
-    figure(1)
-    aggCube = [plotaggregate(layer1,layer2,layercn1,[0 0 0],Normvec,'front',true); layer2];
-    hold on
-    aggCube = [plotaggregate(layer3,aggCube,layercn3,[0 0 0],Normvec,'back',true);aggCube];
-    hold on
-    plotaggregate(layer2,[],layercn2,[],[],[],true);
-    axis equal
-    hold off
-    
-    aggCubeC = [layercn3; layercn1+length(layer3); layercn2+length([layer1; layer3])];
-end
+%final cube
+layer1 = aggLayer.(strcat('layer3')); layercn1 = aggLayerC.(strcat('layer3'));
+layer2 = aggLayer.(strcat('layer2')); layercn2 = aggLayerC.(strcat('layer2'));
+layer3 = aggLayer.(strcat('layer1')); layercn3 = aggLayerC.(strcat('layer1'));
+aggCube = [plotaggregate(layer1,layer2,layercn1,[0 0 0],Normvec,'front',false); layer2];
+aggCube = [plotaggregate(layer3,aggCube,layercn3,[0 0 0],Normvec,'back',false);aggCube];
+plotaggregate(layer2,[],layercn2,[],[],[],false);
+aggCubeC = [layercn3; layercn1+length(layer3); layercn2+length([layer1; layer3])];
 
-%VolumeCheck
+%plotting final cube
+figure(1)
+trimesh(aggCubeC,aggCube(:,1),aggCube(:,2),aggCube(:,3),'FaceAlpha',1,'EdgeColor','k','FaceColor','b');
+axis equal
+
+%volume check
 TR = triangulation(aggCubeC,aggCube);
-stlwrite(TR,'packedagg.stl')
+stlwrite(TR,'packedagg.stl') %creating an stl file
 
 model = createpde;
 importGeometry(model,'packedagg.stl');
@@ -201,59 +196,14 @@ else
     newpts1 = sortedpts1(negidx(end,1)+1:end,:);
 end
 
-%finding if there are any flat faces
-lowz = unique(round(newpts1(:,split1),3));
-lowzidx = find(newpts1(:,split1) > lowz(1));
-
-%removing flat face to generate representative plane...
-%rotating the aggregate until the min x is more than 0...
-flatface = newpts1(1:lowzidx-1,:);
-
-if length(flatface) > 100
-dTheta = 1; 
-stepSz = .25;
-if ~isempty(flatface) %there is flat face
-    while min(flatface(:,split2)) < 0
-        dTheta = dTheta + stepSz;
-        flatface = Rotate(flatface,0,0,-pi./dTheta);
+[~,idx] = sort(newpts1(:,split2));
+sortedpts2 = newpts1(idx,:);
+negidx = find(sortedpts2(:,split2) <= 0);
+    if restrictface == 1 || restrictface == 3
+    newpts1 = sortedpts2(1:negidx(end,1)-1,:);
+    else
+    newpts1 = sortedpts2(negidx(end,1)+1:end,:);
     end
-    pts1 = Rotate(pts1,0,0,-pi/dTheta);
-    newpts1 = Rotate(newpts1,0,0,-pi/dTheta);
-end
-    flat = true;
-else
-    flat = false;
-end
-
-if figurecheck == true
-    figure
-    mesh1 = trimesh(cnt1,pts1(:,1),pts1(:,2),pts1(:,3));
-    mesh1.FaceAlpha = 1;
-    mesh1.EdgeColor = 'b';
-    xlabel('x')
-    ylabel('y')
-    zlabel('z')
-    axis equal
-    hold on
-end
-
-%which tangent plane needs to be find depends on the region...
-if flat == true && restrictface == 2
-    newpts1 = flatface;
-else %further restrict the sliced section...
-    [~,idx] = sort(newpts1(:,split2));
-    sortedpts2 = newpts1(idx,:);
-    negidx = find(sortedpts2(:,split2) <= 0);
-        if restrictface == 1 || restrictface == 3
-        newpts1 = sortedpts2(1:negidx(end,1)-1,:);
-        else
-        newpts1 = sortedpts2(negidx(end,1)+1:end,:);
-        end
-end
-if figurecheck == true
-    plot3(newpts1(:,1),newpts1(:,2),newpts1(:,3),'.r')
-    hold on
-end
 
 if figurecheck == true
     plot3(newpts1(:,1),newpts1(:,2),newpts1(:,3),'.r')

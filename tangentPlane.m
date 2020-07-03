@@ -1,9 +1,10 @@
 %% PACKING THE AGGREGATES
-function VolFract = tangentPlane(repository)
-repos = load(repository); 
-fields = fieldnames(repos.aggRepo);
+clc
+clear
+repos = load('repos.mat');
+fields = fieldnames(repos.myRepo);
 
-%create a matrix to index each of the aggregate...
+%indexing each of the aggregates
 order = ones(3,3);
 iter = 0; multiplier = length(fields).^(1/3);
 for j = 1:multiplier
@@ -16,93 +17,144 @@ for j = 1:multiplier
     order(:,:,j) = rot90(order(:,:,j),2);
 end
 
-%generating the columns of each aggregates
-for col = 1:3
-    for agg = 1:3
-        ao = order(1:3,agg,col);
-        ang = linspace(-pi/8,pi/8,5);
-        
-        rot1 = repos.aggRepo.(fields{ao(3)}).Orientation; 
-        rot2 = repos.aggRepo.(fields{ao(2)}).Orientation; 
-        rot3 = repos.aggRepo.(fields{ao(1)}).Orientation; 
+figure(1) %BEFORE FIGURE
+for i = 1:length(fields)
+    pts = repos.myRepo.(fields{i}).Points;
+    cnt = repos.myRepo.(fields{i}).Faces;
+    trimesh(cnt,pts(:,1),pts(:,2),pts(:,3))
+    hold on
+    axis equal
+    xlabel('x')
+    ylabel('y')
+    zlabel('z')
+end
+hold off
 
-        ptsn1 = Rotate(normalize(repos.aggRepo.(fields{ao(3)}).OriginalPoints),ang(rot3(1)),ang(rot3(2)),ang(rot3(3)));
-        ptsn2 = Rotate(normalize(repos.aggRepo.(fields{ao(2)}).OriginalPoints),ang(rot2(1)),ang(rot2(2)),ang(rot2(3)));
-        ptsn3 =Rotate(normalize(repos.aggRepo.(fields{ao(1)}).OriginalPoints),ang(rot1(1)),ang(rot1(2)),ang(rot1(3)));
+figure(2) %AFTER FIGURE
+[pts14,cm14] = normalize(repos.myRepo.(fields{14}).Points);
+pts14 = pts14 + cm14; aggpts = pts14;
+cnt14 = repos.myRepo.(fields{14}).Faces;
+trimesh(cnt14,pts14(:,1),pts14(:,2),pts14(:,3))
+hold on
+
+sequence = randperm(27); %auto generate a packed version of the aggregates
+for idx = 1:sequence
+    if idx~=14
+    [pts,cm] = normalize(repos.myRepo.(fields{idx}).Points); pts = pts+cm;
+    cnt = repos.myRepo.(fields{idx}).Faces;
+    pts = translate2Pt(idx,pts,aggpts,cm,cm14);
+    aggpts = [aggpts; pts];
+
+    trimesh(cnt,pts(:,1),pts(:,2),pts(:,3))
+    hold on
+    xlabel('x'); ylabel('y'); zlabel('z');
+    axis equal;
+    end
+end
+hold off
+
+function pts = translate2Pt(cubeidx,cubepts,aggpts,cubecm,centercm)
+switch cubeidx
+    case {2, 11, 20}
+        restrictface1 = 'front'; rotidx = 2;
+        if cubeidx == 2
+            restrictface2 = 'right';
+        elseif cubeidx == 11
+            restrictface2 = 'back';
+        elseif cubeidx == 20
+            restrictface2 = 'left';
+        end
         
-        cntn1 = repos.aggRepo.(fields{ao(3)}).OriginalFaces;
-        cntn2 = repos.aggRepo.(fields{ao(2)}).OriginalFaces;
-        cntn3 = repos.aggRepo.(fields{ao(1)}).OriginalFaces;
+    case {8, 17, 26}
+        restrictface1 = 'back'; rotidx = 2;
+        if cubeidx == 8
+            restrictface2 = 'right';
+        elseif cubeidx == 17
+            restrictface2 = 'front';
+        elseif cubeidx == 26
+            restrictface2 = 'left';
+        end
         
-        rottop = optAngle(ptsn2,ptsn1,'bottom','top',2);
-            Normvec = tangentP(ptsn1,cntn1,'top',[0 rottop 0],false);
-            newpts = [plotaggregate(ptsn1,ptsn2,cntn1,[0 rottop 0],Normvec,'top',false); ptsn2];
-            
-        rotbot = optAngle(ptsn2,ptsn3,'top','bottom',2);
-            Normvec = tangentP(ptsn3,cntn3,'bottom',[0 rotbot 0],false);
-            newpts = [plotaggregate(ptsn3,newpts,cntn3,[0 rotbot 0],Normvec,'bottom',false); newpts];
-            
-        plotaggregate(ptsn2,[],cntn2,[],[],[],false);
+    case 13
+        restrictface1 = 'bottom';
+        restrictface2 = 'top';
+        rotidx = 3;
         
-        cntpts = [cntn3; cntn1+length(ptsn3); cntn2+length([ptsn1; ptsn3])];
-        aggStacks.(strcat('stack',num2str(ao(1)./3))) = newpts;
-        aggStacksC.(strcat('stack',num2str(ao(1)./3))) = cntpts;
+    case 15
+        restrictface1 = 'top';
+        restrictface2 = 'bottom';
+        rotidx = 3;
+        
+    case {1, 4, 7, 10, 16, 19, 22, 25}
+        restrictface1 = 'bottom'; rotidx = 2;
+        if cubeidx == 1 || cubeidx == 4 || cubeidx == 7
+            restrictface2 = 'right';
+        elseif cubeidx == 19 || cubeidx == 22 || cubeidx == 25
+            restrictface2 = 'left';
+        elseif cubeidx == 16
+            restrictface2 = 'front';
+        elseif cubeidx == 10
+            restrictface2 = 'back';
+        end
+        
+    case {3, 6, 9, 12, 18, 21, 24, 27}
+        restrictface1 = 'top'; rotidx = 2;
+        if cubeidx == 3 || cubeidx == 6 || cubeidx == 9
+            restrictface2 = 'right';
+        elseif cubeidx == 12 || cubeidx == 18 || cubeidx == 21
+            restrictface2 = 'left';
+        elseif cubeidx == 24
+            restrictface2 = 'front';
+        elseif cubeidx == 27
+            restrictface2 = 'back';
+        end
+        
+    case 23 
+        restrictface1 = 'right';
+        restrictface2 = 'left';
+        rotidx = 2;
+    case 5 
+        restrictface1 = 'left';
+        restrictface2 = 'right';
+        rotidx = 2;
+end
+
+result = optAngle(normalize(aggpts),normalize(cubepts),restrictface1,restrictface2,rotidx);
+%rotate the aggregate and return it to the orginal center
+if rotidx == 2
+    pts = Rotate(normalize(cubepts),0,result,0) + cubecm;
+else
+    pts = Rotate(normalize(cubepts),0,0,result) + cubecm;
+end
+
+%translate to the fixed point
+agg1 = alphaShape(aggpts);
+locate = sum(inShape(agg1,cubepts));
+    while locate == 0
+    [~,cubecm] = normalize(pts);
+    tVect = (centercm-cubecm)./35;
+    pts = pts + tVect;
+    locate = sum(inShape(agg1,pts));
+    
+    if locate ~=0
+        pts = pts - tVect; %revert back to the original location
+    end
     end
 end
 
-%generating each of the layers...
-for layer = 1:3
-    stackidx = order(:,layer,1);
-    stack1 = aggStacks.(strcat('stack',num2str(stackidx(3))));
-    stackcn1 = aggStacksC.(strcat('stack',num2str(stackidx(3))));
-    stack2 = aggStacks.(strcat('stack',num2str(stackidx(2))));
-    stackcn2 = aggStacksC.(strcat('stack',num2str(stackidx(2))));
-    stack3 = aggStacks.(strcat('stack',num2str(stackidx(1))));
-    stackcn3 = aggStacksC.(strcat('stack',num2str(stackidx(1))));
-    
-    rotstack = optAngle(stack2,stack1,'right','left',2);
-    Normvec = tangentP(stack1,stack1,'left',[0 0 rotstack],false);
-    newstack = [plotaggregate(stack1,stack2,stackcn1,[0 0 rotstack],Normvec,'left',false); stack2];
-    
-    rotstack = optAngle(stack2,stack3,'left','right',2);
-    Normvec = tangentP(stack1,stack1,'right',[0 0 rotstack],false);
-    newstack = [plotaggregate(stack3,newstack,stackcn3,[0 0 rotstack],Normvec,'right',false); newstack];
-    
-    plotaggregate(stack2,[],stackcn2,[],[],[],true);
-    
-    cntpts = [stackcn3; stackcn1+length(stack3); stackcn2+length([stack1; stack3])];
-    aggLayer.(strcat('layer',num2str(layer))) = newstack;
-    aggLayerC.(strcat('layer',num2str(layer))) = cntpts;
-end
-
-%final cube
-layer1 = aggLayer.(strcat('layer3')); layercn1 = aggLayerC.(strcat('layer3'));
-layer2 = aggLayer.(strcat('layer2')); layercn2 = aggLayerC.(strcat('layer2'));
-layer3 = aggLayer.(strcat('layer1')); layercn3 = aggLayerC.(strcat('layer1'));
-aggCube = [plotaggregate(layer1,layer2,layercn1,[0 0 0],Normvec,'front',false); layer2];
-aggCube = [plotaggregate(layer3,aggCube,layercn3,[0 0 0],Normvec,'back',false);aggCube];
-plotaggregate(layer2,[],layercn2,[],[],[],false);
-aggCubeC = [layercn3; layercn1+length(layer3); layercn2+length([layer1; layer3])];
-
-%plotting final cube
-figure(1)
-trimesh(aggCubeC,aggCube(:,1),aggCube(:,2),aggCube(:,3),'FaceAlpha',1,'EdgeColor','k','FaceColor','b');
-axis equal
-
-%volume check
-TR = triangulation(aggCubeC,aggCube);
-stlwrite(TR,'packedagg.stl') %creating an stl file
-
-model = createpde;
-importGeometry(model,'packedagg.stl');
-mesh = generateMesh(model);
-mv = volume(mesh);
-
-pts = stlread('packedagg.stl').Points;
-%volume of box
-Vol = (max(pts(:,1)) - min(pts(:,1)))*(max(pts(:,2)) - min(pts(:,2)))*(max(pts(:,3)) - min(pts(:,3)));
-VolFract = mv/Vol;
-end
+% %volume check
+% TR = triangulation(aggCubeC,aggCube);
+% stlwrite(TR,'packedagg.stl') %creating an stl file
+% 
+% model = createpde;
+% importGeometry(model,'packedagg.stl');
+% mesh = generateMesh(model);
+% mv = volume(mesh);
+% 
+% pts = stlread('packedagg.stl').Points;
+% %volume of box
+% Vol = (max(pts(:,1)) - min(pts(:,1)))*(max(pts(:,2)) - min(pts(:,2)))*(max(pts(:,3)) - min(pts(:,3)));
+% VolFract = mv/Vol;
 
 %% FUNCTION CODE
 function pts2 = plotaggregate(pts2,pts1,cnt2,rotangle,NormVec,option,figurecheck)
@@ -123,7 +175,7 @@ end
 function result = optAngle(pts1,pts2,restrictface1,restrictface2,opt)
 %Inputs: agg1 - the stationary/fixed aggregate
 %             agg2 - the aggregate that needs to be "attached"/shifted
-a = linspace(-pi/3,pi/3);
+a = linspace(-pi/6,pi/6);
 optimalangle = [];
 plane1 = tangentP(pts1,[],restrictface1,[0 0 0],false);
 
@@ -296,38 +348,6 @@ datapointsn = datapoints;
 dcm = [0, 0, 0] - centroid; %Distance from centroid to (0,0,0)
 for vertice = 1:length(datapoints)
     datapointsn(vertice,:) = datapoints(vertice,:) + dcm;
-end
-end
-
-function datapointsn = Translate(datapoints1,datapoints2,option)
-agg2 = alphaShape(datapoints2); %stationary
-alpha = 0;
-StepSz = 1;
-datapointsn = datapoints1;
-locate = sum(inShape(agg2,datapoints1));
-
-while locate~=0
-if contains(option,'left')
-    datapointsn(:,1) = datapointsn(:,1) + -1*(alpha+StepSz);
-elseif contains(option,'right')
-    datapointsn(:,1) = datapointsn(:,1) + 1*(alpha+StepSz);
-elseif contains(option,'bottom')
-    datapointsn(:,3) = datapointsn(:,3) + 1*(alpha+StepSz);
-elseif contains(option,'top')
-    datapointsn(:,3) = datapointsn(:,3) + -1*(alpha+StepSz);
-elseif contains(option,'front')
-    datapointsn(:,2) = datapointsn(:,2) + 1*(alpha+StepSz);
-elseif contains(option,'back')
-    datapointsn(:,2) = datapointsn(:,2) + -1*(alpha+StepSz);
-end
-locate = sum(inShape(agg2,datapointsn));
-
-    if locate ~=0
-        datapointsn = datapoints1; %reset
-        StepSz = StepSz + 1;
-    else
-        break
-    end
 end
 end
 

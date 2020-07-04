@@ -1,4 +1,4 @@
-function newRepo = addAgg(originalRepo, aggRepo, cubeSize, newAggNum);
+function newRepo = addAgg(originalRepo, aggRepo, cubeSize, newAggNum)
 %Adds aggregates to the existing aggRepo
 %Inputs: 
 %   originalRepo: the repository generated using reducemesh.m
@@ -7,7 +7,6 @@ function newRepo = addAgg(originalRepo, aggRepo, cubeSize, newAggNum);
 %   newAggNum: the number of aggregates to be added to aggRepo
 %Outputs:
 %   newRepo: aggRepo with new aggregates added
-
     newRepo = aggRepo;
     
     %Setting up constants

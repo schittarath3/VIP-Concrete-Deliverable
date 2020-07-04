@@ -2,6 +2,7 @@
 clc
 clear
 repos = load('repos.mat');
+repos = repos.repos;
 fields = fieldnames(repos.myRepo);
 
 %indexing each of the aggregates
@@ -284,7 +285,7 @@ r0 = newpts1(minidx,:);
 ptsX = [];
 for i = 1:length(newpts1)
     difX= newpts1(i,split2) - r0(split2);
-    if abs(difX) < 15
+    if abs(difX) < 25
         term = newpts1(i,:);
         ptsX = [ptsX; term];
     end
@@ -298,7 +299,7 @@ WidV = ptsX(maxY,:) - ptsX(minY,:);
 ptsY = [];
 for i = 1:length(newpts1)
     difY= newpts1(i,1) - r0(split3);
-    if abs(difY) < 15
+    if abs(difY) < 25
         term = newpts1(i,:);
         ptsY = [ptsY; term];
     end

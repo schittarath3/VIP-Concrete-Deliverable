@@ -29,12 +29,14 @@ function insertRepo = insertAgg(aggRepo, cubesCell, scaleFactor, numOrientations
         for i = 1:numAggs %Rescaling points by scaleFactor
             aggRandNum = aggRandIndex(i); %getting random aggregate
             oriRandIndex = randperm(totalOrientations, numOrientations); %fetching random orientation
+            curAggName = aggNames{i};
             
             %stores aggregates with orientation name
             %scaling aggregates
             for x = 1:numOrientations
                 oriName = orientationNames{oriRandIndex(x)};
-                newName = strcat('ag', num2str(i), num2str(x));
+                newName = strcat(curAggName, "_", oriName(8), oriName(16), ...
+                                oriName(24));
                 
                 %Create index for orientation
                 oriX = str2num(oriName(8));

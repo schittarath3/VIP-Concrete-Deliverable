@@ -11,6 +11,7 @@ testCubes = genCublets(cubeSize, nDivisions, startCoords, 1);
 aggRepo = insertAgg(repos, testCubes, 1, 3);                               %Inserting aggregates into cubes and generating a new repo
 
 %Tangent function call goes here
+aggRepo = tangentPlane(aggRepo);
 
-repoToSTL(aggRepo);                                                        %Converting points into Repo into STL then plotting STL
-plotSTL('STL Files\Aggregates Out');
+% repoToSTL(aggRepo);                                                        %Converting points into Repo into STL then plotting STL
+% plotSTL('STL Files\Aggregates Out');

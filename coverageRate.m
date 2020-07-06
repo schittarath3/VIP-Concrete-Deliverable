@@ -1,6 +1,5 @@
-%find min and maxes and make a new bounding box
-function volumeFrac = volFracCheck(aggRepo)
-%Gets volume fraction of aggregate within the cube
+function [covRate, tAV] = coverageRate(aggRepo, containerVolume)
+%Gets coverage rate of aggregate within the cube
 %Inputs: 
 %   aggRepo: Struct of aggregates of form aggName ->cubeNum,Faces,Points
 %   cubeLength: Length of cube
@@ -11,58 +10,16 @@ function volumeFrac = volFracCheck(aggRepo)
     numAgg = length(aggNames);
 
     totalAggVol = 0;
-    minX = 100000;
-    maxX = -100000;
-    minY = 100000;
-    maxY = -100000;
-    minZ = 100000;
-    maxZ = -100000;
+    covRate = 0;
     for i = 1:numAgg %calculate volume for each aggregate and totals
-
         p = aggRepo.(aggNames{i}).Points';
         f = aggRepo.(aggNames{i}).Faces';
         
-        curMinX = min([p(:,1)]);
-        if curMinX < minX
-            minX = curMinX;
-        end
-        
-        curMaxX = max([p(:,1)]);
-        if curMaxX > maxX
-            maxX = curMaxX;
-        end
-        
-        curMinY = min([p(:,2)]);
-        if curMinY < minY
-            minY = curMinY;
-        end
-        
-        curMaxY = max([p(:,2)]);
-        if curMaxY > maxY
-            maxY = curMaxY;
-        end
-        
-        curMinZ = min([p(:,1)]);
-        if curMinZ < minZ
-            minZ = curMinZ;
-        end
-        
-        curMaxZ = max([p(:,1)]);
-        if curMaxZ > maxZ
-            maxZ = curMaxZ;
-        end
-
         [volume, area] = stlVolume(p,f);
+        covRate = covRate + (-volume/containerVolume);
         totalAggVol = totalAggVol + volume;
     end
-    
-    xLen = maxX - minX;
-    yLen = maxY - minY;
-    zLen = maxZ - minZ;
-    
-    boundingVol = xLen * yLen * zLen;
-    
-    volumeFrac = -totalAggVol/boundingVol;
+    tAV = -totalAggVol;
 end
 
 function [totalVolume,totalArea] = stlVolume(p,t)

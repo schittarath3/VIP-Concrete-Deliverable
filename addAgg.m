@@ -36,8 +36,8 @@ function newRepo = addAgg(originalRepo, aggRepo, cubes, newAggNum)
             aggRepoNames = fieldnames(aggRepo);
             matches = 0;
             for arAggs = 1 : length(aggRepoNames)
-                if strcmp(aggRepo.(aggRepoNames{i}).Original, curAggName) ... 
-                        && sum(aggRepo.(aggRepoNames{i}).Orientation == oriMat) == 3
+                if strcmp(aggRepo.(aggRepoNames{arAggs}).Original, curAggName) ... 
+                        && sum(aggRepo.(aggRepoNames{arAggs}).Orientation == oriMat) == 3
                     matches = matches + 1;
                 end
                         

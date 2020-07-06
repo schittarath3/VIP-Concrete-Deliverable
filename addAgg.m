@@ -1,4 +1,4 @@
-function newRepo = addAgg(originalRepo, aggRepo, cubeSize, newAggNum)
+function newRepo = addAgg(originalRepo, aggRepo, cubes, newAggNum)
 %Adds aggregates to the existing aggRepo
 %Inputs: 
 %   originalRepo: the repository generated using reducemesh.m
@@ -49,36 +49,44 @@ function newRepo = addAgg(originalRepo, aggRepo, cubeSize, newAggNum)
             end
         end
         
-        %Select face of cube to start at
-        switch (randperm(6, 1))
-             case 1
-                 newPoint = [randperm(cubeSize+1, 1)-1 0 randperm(cubeSize+1, 1)-1];
-             case 2
-                 newPoint = [cubeSize randperm(cubeSize+1, 1)-1 randperm(cubeSize+1, 1)-1];
-             case 3
-                 newPoint = [randperm(cubeSize+1, 1)-1 cubeSize randperm(cubeSize+1, 1)-1];
-             case 4
-                 newPoint = [0 randperm(cubeSize+1, 1)-1 randperm(cubeSize+1, 1)-1];
-             case 5
-                 newPoint = [randperm(cubeSize+1, 1)-1 randperm(cubeSize+1, 1)-1 cubeSize];
-             case 6
-                 newPoint = [randperm(cubeSize+1, 1)-1 randperm(cubeSize+1, 1)-1 0];
+        %Select cublet to start at
+        while 1
+            cubeIndx = (randperm(27, 1));
+            if cubeIndx == 14
+                continue
+            else
+                cubePnts = cubes{cubeIndx,1};
+                cubeCent = getCentroid(cubePnts);
+                break
+            end
         end
         
         %Store new data into output repository
-        curNewName = strcat("new", "_", curAggName, , curOriName{1}(8), ...
+        curNewName = strcat("new", "_", curAggName, "_", curOriName{1}(8), ...
                             curOriName{1}(16), curOriName{1}(24));
         newRepo.(curNewName).Original = curAggName;
+        newRepo.(curNewName).cubeNum = cubeIndx;
         newRepo.(curNewName).OriginalPoints = originalRepo.(curAggName).OriginalPoints;
         newRepo.(curNewName).OriginalFaces = originalRepo.(curAggName).OriginalFaces;
         newRepo.(curNewName).Orientation = oriMat;
-        newRepo.(curNewName).Points = normalize(originalRepo.(curAggName).Vertices, newPoint);
+        newRepo.(curNewName).Points = normalizeTo(originalRepo.(curAggName).Vertices, cubeCent);
         newRepo.(curNewName).Faces = originalRepo.(curAggName).Faces;
         
     end
 end
 
-function datapointsn = normalize(datapoints, newCentroid)
+function centroid = getCentroid(datapoints)
+    x = datapoints(:,1);
+    y = datapoints(:,2);
+    z = datapoints(:,3);
+
+    xcm = sum(x)./length(x);
+    ycm = sum(y)./length(y);
+    zcm = sum(z)./length(z);
+    centroid = [xcm ycm zcm];
+end
+
+function datapointsn = normalizeTo(datapoints, newCentroid)
 %Obtain the center of each aggregate
 x = datapoints(:,1);
 y = datapoints(:,2);

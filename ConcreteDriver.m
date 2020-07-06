@@ -1,7 +1,6 @@
 clear
 clc
 %% Driving Code
-
 repos = generateRepo('STL Files\Aggregates Processed 3\*.stl', 9);         %Creating initial directory from stl files of aggregate
 
 startCoords = [1 1 1];                                                     %Creating cubelets to store place aggregates
@@ -13,5 +12,5 @@ aggRepo = insertAgg(repos, testCubes, 1, 3);                               %Inse
 
 %Tangent function call goes here
 
-%repoToSTL(tangentRepo);                                                   %Converting points into Repo into STL then plotting STL
-%plotSTL('STL Files\Aggregates Out');
+repoToSTL(aggRepo);                                                        %Converting points into Repo into STL then plotting STL
+plotSTL('STL Files\Aggregates Out');

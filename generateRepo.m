@@ -1,6 +1,6 @@
 function repos = generateRepo(folder, numSamples)
-fileList = dir(folder)
-samples = length(fileList)
+fileList = dir(folder);
+samples = length(fileList);
 repos = struct;
 if numSamples <= samples
     for ag = 1:numSamples

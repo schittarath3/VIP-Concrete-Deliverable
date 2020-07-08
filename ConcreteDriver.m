@@ -11,7 +11,7 @@ testCubes = genCublets(cubeSize, nDivisions, startCoords, 1);
 aggRepo = insertAgg(repos, testCubes, 1, 3);                               %Inserting aggregates into cubes and generating a new repo
 
 %Ugly code to make a new cube with 50% optimal coverage rate
-newAggNum = 50;
+newAggNum = 75;
 additionAgg = addAgg(repos, aggRepo, testCubes, newAggNum);
 mergedRepo = mergeRepos(aggRepo, additionAgg);
 [t, totalVolume] = coverageRate(mergedRepo, 10000);
@@ -27,7 +27,7 @@ newPoints = [0 0 0; 0 nL 0; nL 0 0; ...
 newPoints = normalizeTo(newPoints, cubeCentroid);
 
 %Tangent function call goes here
-aggRepo = tangentPlane(aggRepo);
+aggRepo = tangentPlane(additionAgg);
 
 % repoToSTL(aggRepo);                                                        %Converting points into Repo into STL then plotting STL
 % plotSTL('STL Files\Aggregates Out');

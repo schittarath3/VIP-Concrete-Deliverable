@@ -14,27 +14,27 @@ for j = 1:multiplier
     order(:,:,j) = rot90(order(:,:,j),2);
 end
 
-figure(1) %AFTER FIGURE
+figure(1)
 ang = linspace(-pi/8,pi/8,5);
 rotOrient = repos.(fields{14}).Orientation;
 pts14 = Rotate(repos.(fields{14}).OriginalPoints,ang(rotOrient(1)),ang(rotOrient(2)),ang(rotOrient(3)));
 [~,cm14] = normalize(repos.(fields{14}).Points);
 pts14 = pts14 + cm14; aggpts = pts14;
 cnt14 = repos.(fields{14}).OriginalFaces;
-trimesh(cnt14,pts14(:,1),pts14(:,2),pts14(:,3),'EdgeColor','red');
+trimesh(cnt14,pts14(:,1),pts14(:,2),pts14(:,3),'EdgeColor','blue');
 
 aggRepov2.(fields{14}).Faces = cnt14;
 aggRepov2.(fields{14}).Points = pts14;
 hold on
 
-sequence = randperm(length(fields)); %auto generate a packed version of the aggregates
+sequence = randperm(27); %auto generate a packed version of the aggregates
 for idx = sequence
-    if idx~=round(length(fields)./2)
+    if idx~=14
     rotaOrient = repos.(fields{idx}).Orientation;
     pts = Rotate(repos.(fields{idx}).OriginalPoints,ang(rotaOrient(1)),ang(rotaOrient(2)),ang(rotaOrient(3)));
     [~,cm] = normalize(repos.(fields{idx}).Points); pts = pts+cm;
     cnt = repos.(fields{idx}).OriginalFaces;
-    pts = translate2Pt(idx,pts,aggpts,cm,cm14);
+    pts = translate2Pt(repos.(fields{idx}).cubeNum,pts,aggpts,cm14,cm);
     aggpts = [aggpts; pts];
 
     trimesh(cnt,pts(:,1),pts(:,2),pts(:,3),'EdgeColor','blue');
@@ -45,10 +45,34 @@ for idx = sequence
     axis equal;
     end
 end
+margin = 10;
+maxZ = max(aggpts(:,3))-margin; minZ = min(aggpts(:,3))+margin;
+maxX = max(aggpts(:,1))-margin; minX = min(aggpts(:,1))+margin;
+maxY = max(aggpts(:,2))-margin; minY = min(aggpts(:,2))+margin;
+
+for addAgg = 28:length(fields)
+    rotaOrient = repos.(fields{addAgg}).Orientation;
+    pts = normalize(Rotate(repos.(fields{addAgg}).OriginalPoints,ang(rotaOrient(1)),ang(rotaOrient(2)),ang(rotaOrient(3))));
+    [~,cm] = normalize(repos.(fields{addAgg}).Points); 
+    pts = pts+Rotate(cm,pi*(1/ randi([5 15],1)),pi*(1/ randi([5 15],1)),pi*(1/randi([5 15],1)));
+    pts = translate2Pt(repos.(fields{addAgg}).cubeNum,pts,aggpts,cm14,cm);
+
+    if max(pts(:,1)) > maxX || min(pts(:,1)) < minX || max(pts(:,2)) > maxY || min(pts(:,2)) < minY || max(pts(:,3)) > maxZ || max(pts(:,3)) < minZ
+        continue
+    else
+        aggpts = [aggpts; pts];
+        cnt = repos.(fields{addAgg}).OriginalFaces;
+        aggRepov2.(fields{idx}).Faces = cnt;
+        aggRepov2.(fields{idx}).Points = pts;
+        trimesh(cnt,pts(:,1),pts(:,2),pts(:,3),'EdgeColor','blue');
+        hold on
+    end
+end
 hold off
 end
 
-function pts = translate2Pt(cubeidx,cubepts,aggpts,cubecm,centercm)
+%% FUNCTION CODE
+function agg = translate2Pt(cubeidx,agg,cluster,clustercm,aggcm)
 switch cubeidx
     case {2, 11, 20}
         restrictface1 = 'front'; rotidx = 2;
@@ -113,51 +137,47 @@ switch cubeidx
         restrictface2 = 'right';
         rotidx = 2;
 end
+clusterA = alphaShape(cluster);
+tangentPts = normalize(searchNear(agg,cluster));
+locate = sum(inShape(clusterA,agg));
 
-pts = cubepts;
-%translate to the fixed point
-agg1 = alphaShape(aggpts);
-locate = sum(inShape(agg1,cubepts));
+try
+    result = optAngle(normalize(agg),tangentPts,restrictface1,restrictface2,rotidx);
+catch
+    result = 0;
+end
+    if rotidx == 2
+        agg = Rotate(normalize(agg),0,result,0) + aggcm;
+    else
+        agg = Rotate(normalize(agg),0,0,result) + aggcm;
+    end
 
     while locate == 0
-    [~,aggcent] = normalize(pts);
-    tVect = (centercm-aggcent)./35;
-    pts = pts + tVect;
-    locate = sum(inShape(agg1,pts));
-    
-    if locate ~=0
-        near = searchNear(pts,aggpts);
-        result = optAngle(normalize(pts),normalize(near),restrictface1,restrictface2,rotidx);
-        if rotidx == 2
-            pts = Rotate(normalize(cubepts),0,result,0) + cubecm;
-        else
-            pts = Rotate(normalize(cubepts),0,0,result) + cubecm;
-        end
-        pts = pts - 25.*tVect;
-        locate = sum(inShape(agg1,pts));
-        
-        while locate == 0
-        [~,aggcent] = normalize(pts);
-        tVect = (centercm-aggcent)./35;
-        pts = pts + tVect;
-        locate = sum(inShape(agg1,pts));
+        [~,aggcm] = normalize(agg);
+        tVect = (clustercm - aggcm)./75;
+        agg = agg + tVect;
+        locate = sum(inShape(clusterA,agg));
             if locate~=0
-                pts = pts - tVect;
+                agg = agg - tVect;
             end
-        end
-    end
     end
 end
-
+        
 function nearestpts = searchNear(agg,cluster)
 [~,centerpt] = normalize(agg);
-nearestpts = [];
+nearestpts = zeros(length(cluster),4);
 for i = 1:length(cluster)
-    dist = norm(cluster(i,:) - centerpt);
-    if dist <= 75
-        nearestpts = [nearestpts; cluster(i,:)];
+    nearestpts(i,1:4) = [norm(cluster(i,:) - centerpt), cluster(i,:)];
+end
+avgDist = mean(nearestpts(:,1));
+
+for i = 1:length(nearestpts)
+    if nearestpts(i,1) >= avgDist
+        nearestpts(i,1:4) = zeros(1,4);
     end
 end
+nearestpts(~any(nearestpts,2),:) = [];
+nearestpts = nearestpts(:,2:4);
 end
 
 function result = optAngle(pts1,pts2,restrictface1,restrictface2,opt)
@@ -188,9 +208,6 @@ result = acos(dot(normvec1(1:3),normvec2(1:3))./(magNormVec1.*magNormVec2));
 end
 
 function result = tangentP(pts1,option,angle,figurecheck)
-%restrictface 1,2 - negative, 3,4 - positive
-%restrictface 1,3 - negative to 0, 2,4 - 0 to positive
-
 if contains(option,'left')
     split1 = 1; %axis where the aggregate is cut into halves
     split2 = 3; %axis where the aggregate is cut into halves again
@@ -270,7 +287,7 @@ r0 = newpts1(minidx,:);
 ptsX = [];
 for i = 1:length(newpts1)
     difX= newpts1(i,split2) - r0(split2);
-    if abs(difX) < 45
+    if abs(difX) < 25
         term = newpts1(i,:);
         ptsX = [ptsX; term];
     end
@@ -284,7 +301,7 @@ WidV = ptsX(maxY,:) - ptsX(minY,:);
 ptsY = [];
 for i = 1:length(newpts1)
     difY= newpts1(i,1) - r0(split3);
-    if abs(difY) < 45
+    if abs(difY) < 25
         term = newpts1(i,:);
         ptsY = [ptsY; term];
     end

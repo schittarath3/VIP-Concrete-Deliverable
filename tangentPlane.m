@@ -1,19 +1,6 @@
 function aggRepov2 = tangentPlane(repos)
 fields = fieldnames(repos);
 
-%indexing each of the aggregates
-order = ones(3,3);
-iter = 0; multiplier = length(fields).^(1/3);
-for j = 1:multiplier
-    for i = 1:multiplier
-        for k = 1:multiplier
-            iter = iter + 1;
-            order(k,i,j) = iter;
-        end
-    end
-    order(:,:,j) = rot90(order(:,:,j),2);
-end
-
 figure(1)
 ang = linspace(-pi/8,pi/8,5);
 rotOrient = repos.(fields{14}).Orientation;
@@ -45,10 +32,10 @@ for idx = sequence
     axis equal;
     end
 end
-margin = 10;
-maxZ = max(aggpts(:,3))-margin; minZ = min(aggpts(:,3))+margin;
-maxX = max(aggpts(:,1))-margin; minX = min(aggpts(:,1))+margin;
-maxY = max(aggpts(:,2))-margin; minY = min(aggpts(:,2))+margin;
+marx = 10; mary = 5; marz = -10;
+maxZ = max(aggpts(:,3))+marz; minZ = min(aggpts(:,3))-marz;
+maxX = max(aggpts(:,1))+marx; minX = min(aggpts(:,1))-marx;
+maxY = max(aggpts(:,2))+mary; minY = min(aggpts(:,2))-mary;
 
 for addAgg = 28:length(fields)
     rotaOrient = repos.(fields{addAgg}).Orientation;
@@ -62,9 +49,9 @@ for addAgg = 28:length(fields)
     else
         aggpts = [aggpts; pts];
         cnt = repos.(fields{addAgg}).OriginalFaces;
-        aggRepov2.(fields{idx}).Faces = cnt;
-        aggRepov2.(fields{idx}).Points = pts;
-        trimesh(cnt,pts(:,1),pts(:,2),pts(:,3),'EdgeColor','blue');
+        aggRepov2.(fields{addAgg}).Faces = cnt;
+        aggRepov2.(fields{addAgg}).Points = pts;
+        trimesh(cnt,pts(:,1),pts(:,2),pts(:,3),'EdgeColor','green');
         hold on
     end
 end

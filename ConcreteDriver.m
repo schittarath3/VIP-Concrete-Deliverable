@@ -1,6 +1,7 @@
 clear
 clc
 %% Driving Code
+tic
 repos = generateRepo('STL Files\Aggregates Processed 3\*.stl', 9);         %Creating initial directory from stl files of aggregate
 
 startCoords = [1 1 1];                                                     %Creating cubelets to store place aggregates
@@ -29,8 +30,9 @@ newPoints = normalizeTo(newPoints, cubeCentroid);
 %Tangent function call goes here
 finalRepo = tangentPlane(additionAgg);
 
-% repoToSTL(aggRepo);                                                        %Converting points into Repo into STL then plotting STL
-% plotSTL('STL Files\Aggregates Out');
+repoToSTL(aggRepo);                                                        %Converting points into Repo into STL then plotting STL
+plotSTL('STL Files\Aggregates Out');
+toc
 %% Functions
 function mergedRepo = mergeRepos(repoA,repoB)
 %Merges two aggRepos

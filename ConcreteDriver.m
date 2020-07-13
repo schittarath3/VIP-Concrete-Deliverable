@@ -5,7 +5,7 @@ tic
 repos = generateRepo('STL Files\Aggregates Processed 3\*.stl', 9);         %Creating initial directory from stl files of aggregate
 
 startCoords = [1 1 1];                                                     %Creating cubelets to store place aggregates
-cubeSize = 561;
+cubeSize = 654;
 nDivisions = 3;
 testCubes = genCublets(cubeSize, nDivisions, startCoords, 1);              
 
@@ -18,19 +18,21 @@ mergedRepo = mergeRepos(aggRepo, additionAgg);
 [t, totalVolume] = coverageRate(mergedRepo, 10000);
 newVolume = (1/0.5) * totalVolume;
 newLength = newVolume ^ (1/3);
-nL = newLength;
+nL = 218;
 
-originalLen = 561;
-cubeCentroid = [originalLen/2 originalLen/2 originalLen/2];
+cubeCentroid = [cubeSize/2 cubeSize/2 cubeSize/2];
 newPoints = [0 0 0; 0 nL 0; nL 0 0; ...
              nL nL 0; 0 0 nL; 0 nL nL; ...
              nL 0 nL; nL nL nL];
+
 newPoints = normalizeTo(newPoints, cubeCentroid);
 
 %Tangent function call goes here
 finalRepo = tangentPlane(additionAgg);
+[finalRate, totalVolume] = coverageRate(finalRepo, 218^3);
+finalRepo = shrinkByOrigin(finalRepo, .10769);
 
-repoToSTL(aggRepo);                                                        %Converting points into Repo into STL then plotting STL
+repoToSTL(finalRepo);                                                        %Converting points into Repo into STL then plotting STL
 plotSTL('STL Files\Aggregates Out');
 toc
 %% Functions

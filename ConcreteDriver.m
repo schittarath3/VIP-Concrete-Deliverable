@@ -30,7 +30,7 @@ newPoints = normalizeTo(newPoints, cubeCentroid);
 %Tangent function call goes here
 finalRepo = tangentPlane(additionAgg);
 [finalRate, totalVolume] = coverageRate(finalRepo, 218^3);
-finalRepo = shrinkByOrigin(finalRepo, .10769);
+%finalRepo = shrinkByOrigin(finalRepo, .10769);
 
 repoToSTL(finalRepo);                                                        %Converting points into Repo into STL then plotting STL
 plotSTL('STL Files\Aggregates Out');

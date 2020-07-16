@@ -2,14 +2,14 @@ clear
 clc
 %% Driving Code
 tic
-repos = generateRepo('STL Files\Aggregates Processed 3\*.stl', 9);         %Creating initial directory from stl files of aggregate
+repos = generateRepo('STL Files\Aggregates Processed 3\*.stl');         %Creating initial directory from stl files of aggregate
 
 startCoords = [1 1 1];                                                     %Creating cubelets to store place aggregates
 cubeSize = 654;
 nDivisions = 3;
 testCubes = genCublets(cubeSize, nDivisions, startCoords, 1);              
 
-aggRepo = insertAgg(repos, testCubes, 1, 3);                               %Inserting aggregates into cubes and generating a new repo
+aggRepo = insertAgg(repos, testCubes, 27);  %Inserting aggregates into cubes and generating a new repo
 
 %Ugly code to make a new cube with 50% optimal coverage rate
 newAggNum = 50;

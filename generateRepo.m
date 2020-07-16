@@ -1,51 +1,48 @@
-function repos = generateRepo(folder, numSamples)
+function repos = generateRepo(folder)
 fileList = dir(folder);
 samples = length(fileList);
 repos = struct;
-if numSamples <= samples
-    for ag = 1:numSamples
-        try
-        filename = fileList(ag,1).name;
-        folderName = fileList(ag,1).folder;
-        fileLoc = strcat(folderName, '\', filename);
-        agg = stlread(fileLoc);
 
-        %generating the points and connectivity
-        pts = normalize(agg.Points);
-        cnt = agg.ConnectivityList;
+for ag = 1:samples
+    try
+    filename = fileList(ag,1).name;
+    folderName = fileList(ag,1).folder;
+    fileLoc = strcat(folderName, '\', filename);
+    agg = stlread(fileLoc);
 
-        %finding volume of mesh
-        set(0,'DefaultFigureVisible','off')
-        model = createpde;
-        importGeometry(model,fileLoc);
-        mesh = generateMesh(model);
-        Vmesh = volume(mesh);
-        figure
-        [V, nf, nv] = Volume(pts,cnt,Vmesh,fileLoc,false);
-        repos.(filename(1:end-4)).Vertices = nv;
-        repos.(filename(1:end-4)).Faces = nf;
-        repos.(filename(1:end-4)).OriginalPoints = pts;
-        repos.(filename(1:end-4)).OriginalFaces = agg.ConnectivityList;
+    %generating the points and connectivity
+    pts = normalize(agg.Points);
+    cnt = agg.ConnectivityList;
 
-        %rotating each of the aggregates for a set orientation...
-        angles = linspace(-pi/8,pi/8,5);
-        tz = 0;
-        for ty = 1:length(angles)
-            for tx = 1:length(angles)
-                for tz = 1:length(angles)
-                    nv = Rotate(nv,angles(tx),angles(ty),angles(tz));
-                    orientation = strcat('tx_indx',num2str(tx),'ty_indx',num2str(ty),'tz_indx',num2str(tz));
-                    repos.(filename(1:end-4)).Orientation.(orientation) = nv;
-                end
+    %finding volume of mesh
+    set(0,'DefaultFigureVisible','off')
+    model = createpde;
+    importGeometry(model,fileLoc);
+    mesh = generateMesh(model);
+    Vmesh = volume(mesh);
+    figure
+    [V, nf, nv] = Volume(pts,cnt,Vmesh,fileLoc,false);
+    repos.(filename(1:end-4)).Vertices = nv;
+    repos.(filename(1:end-4)).Faces = nf;
+    repos.(filename(1:end-4)).OriginalPoints = pts;
+    repos.(filename(1:end-4)).OriginalFaces = agg.ConnectivityList;
+
+    %rotating each of the aggregates for a set orientation...
+    angles = linspace(-pi/8,pi/8,5);
+    tz = 0;
+    for ty = 1:length(angles)
+        for tx = 1:length(angles)
+            for tz = 1:length(angles)
+                nv = Rotate(nv,angles(tx),angles(ty),angles(tz));
+                orientation = strcat('tx_indx',num2str(tx),'ty_indx',num2str(ty),'tz_indx',num2str(tz));
+                repos.(filename(1:end-4)).Orientation.(orientation) = nv;
             end
         end
-
-        catch
-            disp(['error with' + filename]);
-        end
     end
-else 
-    disp("Number of samples less than number in directory")
+
+    catch
+        disp(['error with' + filename]);
+    end
 end
 end
 %% Functions

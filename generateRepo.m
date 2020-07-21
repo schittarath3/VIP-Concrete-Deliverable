@@ -36,6 +36,11 @@ if numSamples <= samples
                     nv = Rotate(nv,angles(tx),angles(ty),angles(tz));
                     orientation = strcat('tx_indx',num2str(tx),'ty_indx',num2str(ty),'tz_indx',num2str(tz));
                     repos.(filename(1:end-4)).Orientation.(orientation) = nv;
+                    
+                    %finding the maximum lengths
+                    repos.(filename(1:end-4)).xLength = max(nv(:,1)) - min(nv(:,1));
+                    repos.(filename(1:end-4)).yLength = max(nv(:,2)) - min(nv(:,2));
+                    repos.(filename(1:end-4)).zLength = max(nv(:,3)) - min(nv(:,3));
                 end
             end
         end

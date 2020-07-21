@@ -3,7 +3,7 @@ files = dir();
 dirFlags = [files.isdir];
 subFolders = files(dirFlags);
 
-results = []; totpassInfo = []; totVolume = [];
+results = []; totpassInfo = []; totVolume = []; grainSzm = [];
     
 for folder = 1:length(subFolders)
     try
@@ -16,7 +16,8 @@ for folder = 1:length(subFolders)
     
     for files = 1:length(fileList)
         filename = strcat(fileList(files).folder,'\',fileList(files).name);
-        [passInfo, totVol] = processImg(filename,sieveSz);
+        [passInfo, totVol, grsize] = processImg(filename,sieveSz);
+        grainSzm = [grainSzm, grsize'];
         totpassInfo = [totpassInfo, passInfo];
         totVolume = [totVolume, totVol];
     end
@@ -30,12 +31,18 @@ figure(1)
 results = (sum(totpassInfo,2)./sum(totVolume)) * 100;
 semilogx(sieveSz,results,'-*')
 ylim([0 100])
-title('Grain Size Distribution')
+title('Grain Size Distribution Sieve Analysis')
 xlabel('Grain Size (pixels)')
 ylabel('Cummulative Passing (%), Volume')
 grid on
 
-function [pass, totVol] = processImg(filename,sieveSz)
+figure(2)
+histogram(grainSzm)
+xlabel('Grain Size (pixels)')
+ylabel('Grain Count')
+title('Particle Size Distribution')
+
+function [pass, totVol, grainsize] = processImg(filename,sieveSz)
 BW=imread(filename); 
 BW=imfill(BW,'holes');
 BW=wiener2(BW,[5 5]);% you can change the size for  this one, e.g., [9,9]

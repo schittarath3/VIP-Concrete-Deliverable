@@ -1,4 +1,4 @@
-function insertRepo = insertAgg(aggRepo, cubesCell, scaleFactor, numOrientations)
+function insertRepo = insertAgg(aggRepo, cubesCell, targetNum)
 %Inserts aggergates into predefined cubes at the cube's centroid
 %Inputs: 
 %   aggRepo: Struct of aggregates in form (aggregateName-Faces,Orientations->orientations) 
@@ -12,55 +12,49 @@ function insertRepo = insertAgg(aggRepo, cubesCell, scaleFactor, numOrientations
 
     %setting up constants
     numSlots = length(cubesCell); %number of available slots
-    numAggs = length(fieldnames(aggRepo)); %number of aggregates
-    totalNumAgg = numAggs * numOrientations; %total number of possible new aggregates
-    scaleMat = [scaleFactor 0 0; 0 scaleFactor 0; 0 0 scaleFactor]; %scaling matrix
+    aggNames = fieldnames(aggRepo); %names of aggregates in AggRepo
+    numAggs = length(aggNames); %number of aggregates
     
     %more constants
-    aggRandIndex = randperm(numAggs); %psuedorandom array to index aggregates
-    aggNames = fieldnames(aggRepo); %names of aggregates in AggRepo
     orientationNames = fieldnames(aggRepo.(aggNames{1}).Orientation); %names of orientations
     totalOrientations = length(orientationNames);
     
     %creates new struct
     insertRepo = struct;
-    if numSlots == totalNumAgg
+    if numSlots == targetNum
+        curNumAgg = 1;
         cubeInd = 1;
-        for i = 1:numAggs %Rescaling points by scaleFactor
-            aggRandNum = aggRandIndex(i); %getting random aggregate
-            oriRandIndex = randperm(totalOrientations, numOrientations); %fetching random orientation
-            curAggName = aggNames{i};
+        while curNumAgg <= targetNum
+            aggRandNum = randi(targetNum, 1);
+            curAggName = aggNames{aggRandNum};
+            oriRandNum = randi(totalOrientations, 1);
+            oriName = orientationNames{oriRandNum};
+                
+            %Create index for orientation
+            oriX = str2num(oriName(8));
+            oriY = str2num(oriName(16));
+            oriZ = str2num(oriName(24));
+            oriMat = [oriX oriY oriZ];
             
-            %stores aggregates with orientation name
-            %scaling aggregates
-            for x = 1:numOrientations
-                oriName = orientationNames{oriRandIndex(x)};
-                newName = strcat(curAggName, "_", oriName(8), oriName(16), ...
+            newName = strcat(curAggName, "_", oriName(8), oriName(16), ...
                                 oriName(24));
-                
-                %Create index for orientation
-                oriX = str2num(oriName(8));
-                oriY = str2num(oriName(16));
-                oriZ = str2num(oriName(24));
-                oriMat = [oriX oriY oriZ];
-                
-                insertRepo.(newName).Original = aggNames{aggRandNum}; %Store original number
-                insertRepo.(newName).cubeNum = cubeInd; %associate aggregate with cubeNum
-                insertRepo.(newName).OriginalPoints = aggRepo.(aggNames{aggRandNum}).OriginalPoints;
-                insertRepo.(newName).OriginalFaces = aggRepo.(aggNames{aggRandNum}).OriginalFaces;
-                cubeInd = cubeInd + 1;
-                insertRepo.(newName).Orientation = oriMat; %Indices for linspace
-                insertRepo.(newName).Points ... 
-                    = aggRepo.(aggNames{aggRandNum}).Orientation.(oriName) * scaleMat; %Scale down points
-                insertRepo.(newName).Faces = aggRepo.(aggNames{aggRandNum}).Faces; %Store connectivity
-            
-            end
+                            
+           insertRepo.(newName).Original = aggNames{aggRandNum}; %Store original number
+           insertRepo.(newName).cubeNum = cubeInd; %associate aggregate with cubeNum
+           insertRepo.(newName).OriginalPoints = aggRepo.(aggNames{aggRandNum}).OriginalPoints;
+           insertRepo.(newName).OriginalFaces = aggRepo.(aggNames{aggRandNum}).OriginalFaces;
+           cubeInd = cubeInd + 1;
+           insertRepo.(newName).Orientation = oriMat; %Indices for linspace
+           insertRepo.(newName).Points ... 
+                = aggRepo.(aggNames{aggRandNum}).Orientation.(oriName);
+           insertRepo.(newName).Faces = aggRepo.(aggNames{aggRandNum}).Faces; %Store connectivity
+           
+           curNumAgg = curNumAgg + 1;
         end
-        
+
         newAggName = fieldnames(insertRepo); %get new aggregate names
-        newRanInd = randperm(totalNumAgg);
-        
-        for i = 1:totalNumAgg %associate each aggregate in aggRepo to a cube in cubeCell
+        newRanInd = randperm(targetNum);
+        for i = 1:targetNum %associate each aggregate in aggRepo to a cube in cubeCell
             curAggName = newAggName{newRanInd(i)}; 
             cubeNum = insertRepo.(curAggName).cubeNum;
             cubelet = cubesCell{cubeNum}; %gets random cube point
@@ -68,7 +62,7 @@ function insertRepo = insertAgg(aggRepo, cubesCell, scaleFactor, numOrientations
             
             cubeCentroid = getCentroid(cubelet);
             insertRepo.(curAggName).Points ... %normalize aggregate centroid to cube centroid
-                = normalize(insertRepo.(curAggName).Points, cubeCentroid);
+                = normalizeTo(insertRepo.(curAggName).Points, cubeCentroid);
             pointCheck = ~inShape(cubeAlpha, insertRepo.(curAggName).Points);
             pointCheckSum = sum(pointCheck, 'all');
             if pointCheckSum > 0 %checks if any aggregate points are outside the cube
@@ -95,7 +89,7 @@ function centroid = getCentroid(datapoints)
     centroid = [xcm ycm zcm];
 end
 
-function datapointsn = normalize(datapoints, cubeCentroid)
+function datapointsn = normalizeTo(datapoints, cubeCentroid)
 %Obtain the center of each aggregate
 x = datapoints(:,1);
 y = datapoints(:,2);

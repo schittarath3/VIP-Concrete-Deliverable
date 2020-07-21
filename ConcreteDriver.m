@@ -2,14 +2,14 @@ clear
 clc
 %% Driving Code
 tic
-repos = generateRepo('STL Files\Aggregates Processed 3\*.stl', 9);         %Creating initial directory from stl files of aggregate
+repos = generateRepo('STL Files\Aggregates Processed 3\*.stl');         %Creating initial directory from stl files of aggregate
 
 startCoords = [1 1 1];                                                     %Creating cubelets to store place aggregates
 cubeSize = 654;
 nDivisions = 3;
 testCubes = genCublets(cubeSize, nDivisions, startCoords, 1);              
 
-aggRepo = insertAgg(repos, testCubes, 1, 3);                               %Inserting aggregates into cubes and generating a new repo
+aggRepo = insertAgg(repos, testCubes, 27);  %Inserting aggregates into cubes and generating a new repo
 
 %Ugly code to make a new cube with 50% optimal coverage rate
 newAggNum = 50;
@@ -30,7 +30,7 @@ newPoints = normalizeTo(newPoints, cubeCentroid);
 %Tangent function call goes here
 finalRepo = tangentPlane(additionAgg);
 [finalRate, totalVolume] = coverageRate(finalRepo, 218^3);
-finalRepo = shrinkByOrigin(finalRepo, .10769);
+%finalRepo = shrinkByOrigin(finalRepo, .10769);
 
 repoToSTL(finalRepo);                                                        %Converting points into Repo into STL then plotting STL
 plotSTL('STL Files\Aggregates Out');

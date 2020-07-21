@@ -5,10 +5,20 @@ files = dir('*.stl');
 angles = linspace(0,2*pi,20);
 grainSz = zeros(length(angles),length(angles));
 
+
 for num = 1:length(files)
 for angY = 1:length(angles)
 for angX = 1:length(angles)
     filename = files(num).name;
+    
+    if angY == 1 && angX == 1
+    %volume
+    model = createpde;
+    importGeometry(model,filename);
+    mesh = generateMesh(model);
+    repos.(filename(1:end-4)).Volume  = volume(mesh);
+    end
+    
     pts = Rotate(normalize(stlread(filename).Points),angles(angX),angles(angY),0);
 %     cnt = stlread(files(1).name).ConnectivityList;
 %     

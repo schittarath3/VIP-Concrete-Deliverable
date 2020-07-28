@@ -42,7 +42,7 @@ for angX = 1:length(angles)
 %     hold off
 end
 end
-repos.(filename(1:end-4)).GrainSize = min(grainSz,[],'all');
+repos.(filename(1:end-4)).GrainSize = mean(grainSz,'all');
 end
     
 function datapointsn = normalize(datapoints)

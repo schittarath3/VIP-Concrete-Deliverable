@@ -11,7 +11,7 @@ for folder = 1:length(subFolders)
     fileList = dir(strcat(imageFold,'/*.png'));
     
     scale = .10769;
-    numSieve = 10;
+    numSieve = 40;
     sieveSz = linspace(0,45/scale,numSieve); %size of sieve in equal intervals
     
     for files = 1:length(fileList)

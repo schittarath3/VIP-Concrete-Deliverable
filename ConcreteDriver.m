@@ -1,8 +1,7 @@
-clear
-clc
+
 %% Driving Code
 tic
-repos = generateRepo('STL Files\Aggregates Processed 3\*.stl');         %Creating initial directory from stl files of aggregate
+repos = generateRepo('STL Files\Aggregates Processed 3\*.stl', 27);         %Creating initial directory from stl files of aggregate
 
 startCoords = [1 1 1];                                                     %Creating cubelets to store place aggregates
 cubeSize = 654;

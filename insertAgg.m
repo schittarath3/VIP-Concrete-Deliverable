@@ -39,6 +39,10 @@ function insertRepo = insertAgg(aggRepo, cubesCell, targetNum)
             newName = strcat(curAggName, "_", oriName(8), oriName(16), ...
                                 oriName(24));
                             
+            if isfield(insertRepo, newName)
+                continue
+            end
+                            
            insertRepo.(newName).Original = aggNames{aggRandNum}; %Store original number
            insertRepo.(newName).cubeNum = cubeInd; %associate aggregate with cubeNum
            insertRepo.(newName).OriginalPoints = aggRepo.(aggNames{aggRandNum}).OriginalPoints;

@@ -21,7 +21,7 @@ function aggRepo = generateDistributedRepo(repos, totalAggNum, distribResults, d
     aggNames = fieldnames(repos);
     oriNames = fieldnames(repos.(aggNames{1}).Orientation);
     
-    %Looping through the bin
+    %Looping through the bin sizes
     for bin = 2:length(binSizes)
         if binSizes(bin) == 0
             continue
@@ -29,6 +29,8 @@ function aggRepo = generateDistributedRepo(repos, totalAggNum, distribResults, d
         
         binAggNum = 0;
         aggSizes = linspace(round(distribBins(bin-1)), round(distribBins(bin)), 100);
+        
+        %Creating new scaled aggregates
         while binAggNum < binSizes(bin)
             aggRandNum = randi(length(aggNames), 1);
             curAggName = aggNames{aggRandNum};
@@ -48,6 +50,8 @@ function aggRepo = generateDistributedRepo(repos, totalAggNum, distribResults, d
                 continue
             end
             
+            %Scaling the aggregates and getting the diameter of the
+            %aggregate based on least-volume ellipsoid approximation
             curAgg = repos.(curAggName).Orientation.(oriName);
             curAggDiameter = maxDiam(curAgg);
             scaleMat = [aggSizes(randi(100, 1))/curAggDiameter 0 0; ...
@@ -56,6 +60,7 @@ function aggRepo = generateDistributedRepo(repos, totalAggNum, distribResults, d
             curAgg = curAgg * scaleMat;
             newAggDiameter = maxDiam(curAgg);
             
+            %Storing information into the struct
            aggRepo.(newName).Original = curAggName; %Store original name
            aggRepo.(newName).OriginalPoints = repos.(curAggName).OriginalPoints;
            aggRepo.(newName).OriginalFaces = repos.(curAggName).OriginalFaces;
@@ -84,5 +89,17 @@ datapointsn = datapoints;
 dcm = centroid - newCentroid; %Distance from centroid to cubeCentroid
 for vertice = 1:length(datapoints)
     datapointsn(vertice,:) = [datapoints(vertice,:) - dcm];
+end
+end
+
+function dist = maxDiam(aggpts)
+dist = 0;
+for i = 1:length(aggpts)
+    for k = 1:length(aggpts)
+    distp = abs(norm(aggpts(i,:) - aggpts(k,:)));
+    if distp > dist
+        dist = distp;
+    end
+    end
 end
 end

@@ -1,3 +1,8 @@
+%Sieve analysis/particle distribution analysis of the 2D aggregates using
+%the generated binary images. The calculations can be referenced to the
+%research paper "Image Analysis Techniques on Evaluation of Particle Size 
+%Distribution of Gravel by G.H.A. Kumara, et al.
+
 clc; clear;
 files = dir();
 dirFlags = [files.isdir];
@@ -12,7 +17,7 @@ for folder = 1:length(subFolders)
     
     scale = .10769;
     numSieve = 40;
-    sieveSz = linspace(0,45/scale,numSieve); %size of sieve in equal intervals
+    sieveSz = linspace(0,45/scale,numSieve); %Size of sieve in equal intervals
     
     for files = 1:length(fileList)
         filename = strcat(fileList(files).folder,'\',fileList(files).name);
@@ -45,9 +50,9 @@ title('Particle Size Distribution')
 function [pass, totVol, grainsize] = processImg(filename,sieveSz)
 BW=imread(filename); 
 BW=imfill(BW,'holes');
-BW=wiener2(BW,[5 5]);% you can change the size for  this one, e.g., [9,9]
+BW=wiener2(BW,[5 5]);
 
-% get properties of individual particles
+%Get properties of individual particles
 props = regionprops('table',BW,'Centroid','MajorAxisLength',...
 'MinorAxisLength','ConvexArea','Area','Perimeter');
 
@@ -60,7 +65,7 @@ area=table2array(props(:,{'Area'}))*scale^2;
 grainsize = sqrt(0.5*(minor.^2 + major.^2));
 volumeest = (4/3).*area.*(1/2).*(0.6837*minor);
 
-%grain size vs. percent passing
+%Grain size vs. percent passing
 pass = zeros(length(sieveSz),length(grainsize)); %matrix storing success in passing
 for Sieve = 1:length(sieveSz) %starting with first sieve size
     for grain = 1:length(grainsize) 

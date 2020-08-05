@@ -1,5 +1,8 @@
+%Find the grain size of the aggregates using 3D points generated from the 
+%stl files of the aggregates. 
+%The calculations can be referenced to the research paper "Image Analysis 
+%Techniques on Evaluation of Particle Size Distribution of Gravel by G.H.A. Kumara, et al.
 clc;clear;
-
 files = dir('*.stl');
 
 angles = linspace(0,2*pi,20);
@@ -31,6 +34,7 @@ for angX = 1:length(angles)
     [Ylength1,maxY] = max(pts(:,2));
     [Ylength2,minY] = min(pts(:,2));
 
+    %Calculate parallel length
     grainSz(angX,angY) = sqrt(0.5*((Xlength1-Xlength2).^2 + (Ylength1-Ylength2).^2));
 %     view(0,90)
 %     plot3(pts(maxX,1),pts(maxX,2),pts(maxX,3),'r*');

@@ -1,4 +1,4 @@
-function insertRepo = insertAgg(aggRepo, cubesCell, targetNum)
+function [insertRepo, aggRepo] = insertAgg(aggRepo, cubesCell, targetNum)
 %Inserts aggergates into predefined cubes at the cube's centroid
 %Inputs: 
 %   aggRepo: Struct of aggregates in form (aggregateName-Faces,Orientations->orientations) 
@@ -13,49 +13,18 @@ function insertRepo = insertAgg(aggRepo, cubesCell, targetNum)
     %setting up constants
     numSlots = length(cubesCell); %number of available slots
     aggNames = fieldnames(aggRepo); %names of aggregates in AggRepo
-    numAggs = length(aggNames); %number of aggregates
-    
-    %more constants
-    orientationNames = fieldnames(aggRepo.(aggNames{1}).Orientation); %names of orientations
-    totalOrientations = length(orientationNames);
+    aggNames = aggNames(end-26:end);
     
     %creates new struct
     insertRepo = struct;
+    cubeNum = randperm(27);
     if numSlots == targetNum
-        curNumAgg = 1;
-        cubeInd = 1;
-        while curNumAgg <= targetNum
-            aggRandNum = randi(targetNum, 1);
-            curAggName = aggNames{aggRandNum};
-            oriRandNum = randi(totalOrientations, 1);
-            oriName = orientationNames{oriRandNum};
-                
-            %Create index for orientation
-            oriX = str2num(oriName(8));
-            oriY = str2num(oriName(16));
-            oriZ = str2num(oriName(24));
-            oriMat = [oriX oriY oriZ];
-            
-            newName = strcat(curAggName, "_", oriName(8), oriName(16), ...
-                                oriName(24));
-                            
-            if isfield(insertRepo, newName)
-                continue
-            end
-                            
-           insertRepo.(newName).Original = aggNames{aggRandNum}; %Store original number
-           insertRepo.(newName).cubeNum = cubeInd; %associate aggregate with cubeNum
-           insertRepo.(newName).OriginalPoints = aggRepo.(aggNames{aggRandNum}).OriginalPoints;
-           insertRepo.(newName).OriginalFaces = aggRepo.(aggNames{aggRandNum}).OriginalFaces;
-           cubeInd = cubeInd + 1;
-           insertRepo.(newName).Orientation = oriMat; %Indices for linspace
-           insertRepo.(newName).Points ... 
-                = aggRepo.(aggNames{aggRandNum}).Orientation.(oriName);
-           insertRepo.(newName).Faces = aggRepo.(aggNames{aggRandNum}).Faces; %Store connectivity
-           
-           curNumAgg = curNumAgg + 1;
+        for i = 1:targetNum
+            insertRepo.(aggNames{i}) = aggRepo.(aggNames{i});
+            insertRepo.(aggNames{i}).cubeNum = cubeNum(i);
         end
-
+        aggRepo = rmfield(aggRepo, aggNames);
+        
         newAggName = fieldnames(insertRepo); %get new aggregate names
         newRanInd = randperm(targetNum);
         for i = 1:targetNum %associate each aggregate in aggRepo to a cube in cubeCell
@@ -67,15 +36,6 @@ function insertRepo = insertAgg(aggRepo, cubesCell, targetNum)
             cubeCentroid = getCentroid(cubelet);
             insertRepo.(curAggName).Points ... %normalize aggregate centroid to cube centroid
                 = normalizeTo(insertRepo.(curAggName).Points, cubeCentroid);
-            pointCheck = ~inShape(cubeAlpha, insertRepo.(curAggName).Points);
-            pointCheckSum = sum(pointCheck, 'all');
-            if pointCheckSum > 0 %checks if any aggregate points are outside the cube
-                disp("Aggregate " + curAggName +...
-                     " does not fit within mini cube. Try decreasing the scaling factor.")
-                break
-            else
-                continue
-            end
         end
     else
         disp("Number of cubes and number of aggregates do not match")

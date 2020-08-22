@@ -1,4 +1,5 @@
-
+clc
+clear
 %% Driving Code
 tic
 repos = generateRepo('STL Files\Aggregates Processed 3\*.stl', 27);         %Creating initial directory from stl files of aggregate
@@ -8,26 +9,12 @@ cubeSize = 654;
 nDivisions = 3;
 testCubes = genCublets(cubeSize, nDivisions, startCoords, 1);              
 
-aggRepo = insertAgg(repos, testCubes, 27);  %Inserting aggregates into cubes and generating a new repo
-
-%Ugly code to make a new cube with 50% optimal coverage rate
-newAggNum = 50;
-additionAgg = addAgg(repos, aggRepo, testCubes, newAggNum);
-mergedRepo = mergeRepos(aggRepo, additionAgg);
-[t, totalVolume] = coverageRate(mergedRepo, 10000);
-newVolume = (1/0.5) * totalVolume;
-newLength = newVolume ^ (1/3);
-nL = 218;
-
-cubeCentroid = [cubeSize/2 cubeSize/2 cubeSize/2];
-newPoints = [0 0 0; 0 nL 0; nL 0 0; ...
-             nL nL 0; 0 0 nL; 0 nL nL; ...
-             nL 0 nL; nL nL nL];
-
-newPoints = normalizeTo(newPoints, cubeCentroid);
+load('grainsizeresults.mat')
+aggRepo = generateDistributedRepo(repos, 1000, results, sieveSz)
+[insertRepo, aggRepo] = insertAgg(aggRepo, testCubes, 27);  %Inserting aggregates into cubes and generating a new repo
 
 %Tangent function call goes here
-finalRepo = tangentPlane(additionAgg);
+finalRepo = tangentPlane(insertRepo);
 [finalRate, totalVolume] = coverageRate(finalRepo, 218^3);
 %finalRepo = shrinkByOrigin(finalRepo, .10769);
 

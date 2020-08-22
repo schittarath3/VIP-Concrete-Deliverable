@@ -1,7 +1,14 @@
 function repos = generateRepo(folder, numSamples)
+%Generate a repository of the aggregates with the reduce mesh (to save
+%calculation time) along with their connectivity list and the original
+%points stored in a struct. The repository also includes the points of the
+%aggregates rotated at a random angles.
+
+%Read the stl files inside of the folder...
 fileList = dir(folder);
 samples = length(fileList);
 repos = struct;
+
 if numSamples <= samples
     for ag = 1:numSamples
         try
@@ -22,12 +29,14 @@ if numSamples <= samples
         Vmesh = volume(mesh);
         figure
         [V, nf, nv] = Volume(pts,cnt,Vmesh,fileLoc,false);
+        
+        %Generating the repository of the aggregates...
         repos.(filename(1:end-4)).Vertices = nv;
         repos.(filename(1:end-4)).Faces = nf;
         repos.(filename(1:end-4)).OriginalPoints = pts;
         repos.(filename(1:end-4)).OriginalFaces = agg.ConnectivityList;
 
-        %rotating each of the aggregates for a set orientation...
+        %Rotating each of the aggregates for a set orientation...
         angles = linspace(-pi/8,pi/8,5);
         tz = 0;
         for ty = 1:length(angles)
@@ -65,13 +74,15 @@ nv = nv';
 end
 
 function [aggVol, nf, nv] = Volume(pts,cnt,meshv,filename,plot)
-%calculating percentage based on face
-set(0,'DefaultFigureVisible','off') %turn off any figures
+%Finding the volume of the aggregates along with the connectivity list and
+%the new coordinates of the reduced mes.
 
+%Calculating percentage based on the number of faces...
+set(0,'DefaultFigureVisible','off') %turn off any figures
 mesh = trimesh(cnt,pts(:,1),pts(:,2),pts(:,3));
 tol = 200;
 numFaces = length(mesh.Faces(:,1));
-redper = tol/numFaces;
+redper = tol/numFaces; 
 [nf, nv] = reducepatch(mesh,redper);
 
 %calculating shrink percentage
@@ -79,9 +90,11 @@ stepsz = .02;
 aggVol = abs(stlVolume(nv',nf'));
 aggVf = meshv./aggVol;
 
-volfract = .80; %ideal vol fraction
+volfract = .80; %Ideal volume fraction, this is the finite number that will stop
+%the aggregate from further reducing. If the mesh is too reduced, it will
+%be inside of the original and be too small.
 while aggVf > volfract
-    nvnew = nv*(1.0+stepsz); %gradually increasing representative shape
+    nvnew = nv*(1.0+stepsz); %Gradually increasing representative shape
     aggVolnew = abs(stlVolume(nvnew',nf'));
     aggVfnew = meshv./aggVolnew;
     
@@ -94,7 +107,7 @@ while aggVf > volfract
     end
 end
 
-if plot == true
+if plot == true %If a plot is needed to see how the new reduced mesh compares with the original mesh.
     set(0,'DefaultFigureVisible','on')
     TR = trimesh(cnt,pts(:,1),pts(:,2),pts(:,3));
     hold on

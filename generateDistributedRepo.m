@@ -68,6 +68,7 @@ function aggRepo = generateDistributedRepo(repos, totalAggNum, distribResults, d
            aggRepo.(newName).Faces = repos.(aggNames{aggRandNum}).Faces; %Store connectivity
            aggRepo.(newName).Orientation = oriMat; %Indices for linspace
            aggRepo.(newName).Diameter = newAggDiameter;
+           aggRepo.(newName).bin = bin;
            binAggNum = binAggNum + 1;
         end
     end

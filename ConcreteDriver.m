@@ -2,6 +2,7 @@ clc
 clear
 %% Driving Code
 tic
+
 repos = generateRepo('STL Files\Aggregates Processed 3\*.stl', 27);         %Creating initial directory from stl files of aggregate
 
 startCoords = [1 1 1];                                                     %Creating cubelets to store place aggregates
@@ -10,10 +11,11 @@ nDivisions = 3;
 testCubes = genCublets(cubeSize, nDivisions, startCoords, 1);              
 
 load('grainsizeresults.mat')
-aggRepo = generateDistributedRepo(repos, 1000, results, sieveSz);
+results = grainsizeresults(:,1);
+sieveSz = grainsizeresults(:,2);
+aggRepo = generateDistributedRepo(repos, 10, results, sieveSz);
 [insertRepo, aggRepo] = insertAgg(aggRepo, testCubes, 27);  %Inserting aggregates into cubes and generating a new repo
 
-%Tangent function call goes here
 finalRepo = tangentPlane(insertRepo);
 [finalRate, totalVolume] = coverageRate(finalRepo, 218^3);
 %finalRepo = shrinkByOrigin(finalRepo, .10769);
@@ -31,7 +33,6 @@ function mergedRepo = mergeRepos(repoA,repoB)
         mergedRepo.(fn{i}) = repoB.(fn{i});
     end
 end
-
 function datapointsn = normalizeTo(datapoints, newCentroid)
 %Obtain the center of each aggregate
 x = datapoints(:,1);

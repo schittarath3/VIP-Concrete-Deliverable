@@ -11,6 +11,13 @@ function aggRepov2 = tangentPlane(repos)
  %  coordinates of the packed aggregates.
 fields = fieldnames(repos);
 
+%Sorting the given repo in order of cube number...
+newfields = fields;
+for idx = 1:length(fields)
+    orderidx = repos.(fields{idx}).cubeNum;
+    newfields(orderidx,1) = fields(orderidx); 
+end
+fields = newfields;
 
 %Defining the center aggregate where successive aggregates will be added by
 %translating towards it (this is defined as the 14th position in the cube

@@ -47,6 +47,8 @@ xlabel('Grain Size (pixels)')
 ylabel('Grain Count')
 title('Particle Size Distribution')
 
+grainsizeresults = [results sieveSz'];
+
 function [pass, totVol, grainsize] = processImg(filename,sieveSz)
 BW=imread(filename); 
 BW=imfill(BW,'holes');

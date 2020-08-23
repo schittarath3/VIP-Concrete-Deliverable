@@ -3,6 +3,9 @@ function repos = generateRepo(folder, numSamples)
 %calculation time) along with their connectivity list and the original
 %points stored in a struct. The repository also includes the points of the
 %aggregates rotated at a random angles.
+%Inputs:
+%   folder - folder location name (string)
+%   numSamples - number of aggregates desired
 
 %Read the stl files inside of the folder...
 fileList = dir(folder);

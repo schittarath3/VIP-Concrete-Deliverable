@@ -107,66 +107,66 @@ function agg = translate2Pt(cubeidx,agg,cluster,clustercm,aggcm)
 %tells the code which face it will calculate the normal vector of.
 switch cubeidx
     case {2, 11, 20}
-        restrictface1 = 'front'; rotidx = 2;
+        restrictface1 = [2 3 1 1]; rotidx = 2;
         if cubeidx == 2
-            restrictface2 = 'right';
+            restrictface2 = [1 2 3 4];
         elseif cubeidx == 11
-            restrictface2 = 'back';
+            restrictface2 = [2 3 1 3];
         elseif cubeidx == 20
-            restrictface2 = 'left';
+            restrictface2 = [1 2 3 2];
         end
         
     case {8, 17, 26}
-        restrictface1 = 'back'; rotidx = 2;
+        restrictface1 = [2 1 3 3]; rotidx = 2;
         if cubeidx == 8
-            restrictface2 = 'right';
+            restrictface2 = [1 2 3 3];
         elseif cubeidx == 17
-            restrictface2 = 'front';
+            restrictface2 = [2 3 1 1];
         elseif cubeidx == 26
-            restrictface2 = 'left';
+            restrictface2 = [1 3 2 1];
         end
         
     case 13
-        restrictface1 = 'bottom';
-        restrictface2 = 'top';
+        restrictface1 = [3 2 1 1];
+        restrictface2 = [3 2 1 4];
         rotidx = 3;
         
     case 15
-        restrictface1 = 'top';
-        restrictface2 = 'bottom';
+        restrictface1 = [3 2 1 4];
+        restrictface2 = [3 2 1 1];
         rotidx = 3;
         
     case {1, 4, 7, 10, 16, 19, 22, 25}
-        restrictface1 = 'bottom'; rotidx = 2;
+        restrictface1 = [3 1 2 1]; rotidx = 2;
         if cubeidx == 1 || cubeidx == 4 || cubeidx == 7
-            restrictface2 = 'right';
+            restrictface2 = [1 3 2 3];
         elseif cubeidx == 19 || cubeidx == 22 || cubeidx == 25
-            restrictface2 = 'left';
+            restrictface2 = [1 3 2 2];
         elseif cubeidx == 16
-            restrictface2 = 'front';
+            restrictface2 = [2 1 3 2];
         elseif cubeidx == 10
-            restrictface2 = 'back';
+            restrictface2 = [2 1 3 3];
         end
         
     case {3, 6, 9, 12, 18, 21, 24, 27}
-        restrictface1 = 'top'; rotidx = 2;
+        restrictface1 = [3 2 1 3]; rotidx = 2;
         if cubeidx == 3 || cubeidx == 6 || cubeidx == 9
-            restrictface2 = 'right';
+            restrictface2 = [1 3 2 4]';
         elseif cubeidx == 12 || cubeidx == 18 || cubeidx == 21
-            restrictface2 = 'left';
+            restrictface2 = [2 1 3 3];
         elseif cubeidx == 24
-            restrictface2 = 'front';
+            restrictface2 = [2 3 1 1];
         elseif cubeidx == 27
-            restrictface2 = 'back';
+            restrictface2 = [2 3 1 2];
         end
         
     case 23 
-        restrictface1 = 'right';
-        restrictface2 = 'left';
+        restrictface1 = [1 3 2 3];
+        restrictface2 = [1 2 3 1];
         rotidx = 2;
     case 5 
-        restrictface1 = 'left';
-        restrictface2 = 'right';
+        restrictface1 = [1 2 3 1];
+        restrictface2 = [1 3 2 3];
         rotidx = 2;
 end
 
@@ -255,37 +255,11 @@ function result = tangentP(pts1,option,angle,figurecheck)
 %(x,y,z) and the face is defined by the negative or positive of the axes.
 %Using those points, the extreme point is used as an "anchor" to generate
 %the vectors that approximates the plane of the surface. 
-if contains(option,'left')
-    split1 = 1; %axis where the aggregate is cut into halves
-    split2 = 3; %axis where the aggregate is cut into halves again
-    split3 = 2;
-    restrictface = 1;
-elseif contains(option,'right')
-    split1 = 1;
-    split2 = 3;
-    split3 = 2;
-    restrictface = 4;
-elseif contains(option,'bottom')
-    split1 = 3;
-    split2 = 2;
-    split3 = 1;
-    restrictface = 3;
-elseif contains(option,'top')
-    split1 = 3;
-    split2 = 2;
-    split3 = 1;
-    restrictface = 4;
-elseif contains(option,'front')
-    split1 = 2;
-    split2 = 3;
-    split3 = 1;
-    restrictface = 4;
-elseif contains (option, 'back')
-    split1 = 2;
-    split2 = 3;
-    split3 = 1;
-    restrictface = 1;
-end
+
+split1 = option(1);
+split2 = option(2);
+split3 = option(3);
+restrictface = option(4);
 pts1 = Rotate(pts1,angle(1),angle(2),angle(3));
 
 %Generating the tangent line of the top...

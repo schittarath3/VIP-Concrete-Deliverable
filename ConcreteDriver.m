@@ -10,7 +10,7 @@ nDivisions = 3;
 testCubes = genCublets(cubeSize, nDivisions, startCoords, 1);              
 
 load('grainsizeresults.mat')
-aggRepo = generateDistributedRepo(repos, 1000, results, sieveSz)
+aggRepo = generateDistributedRepo(repos, 1000, results, sieveSz);
 [insertRepo, aggRepo] = insertAgg(aggRepo, testCubes, 27);  %Inserting aggregates into cubes and generating a new repo
 
 %Tangent function call goes here

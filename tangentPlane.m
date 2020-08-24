@@ -226,7 +226,7 @@ nearestpts(~any(nearestpts,2),:) = [];
 nearestpts = nearestpts(:,2:4);
 end
 
-function result = optAngle(pts1,pts2,restrictface1,restrictface2,opt)
+ function result = optAngle(pts1,pts2,restrictface1,restrictface2,opt)
 %Find the optimal angle to rotate the translating aggregate so that the two
 %calculated tangent planes are at 0-degrees with each other.
 a = linspace(-pi/3,pi/3);

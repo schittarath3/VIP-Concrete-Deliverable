@@ -49,7 +49,6 @@ for idx = sequence
         %nearly 0 degrees angle.
         [~,cm] = normalize(repos.(fields{idx}).Points); pts = pts+cm;
         cnt = repos.(fields{idx}).OriginalFaces;
-        disp(repos.(fields{idx}).cubeNum)
         pts = translate2Pt(repos.(fields{idx}).cubeNum,pts,aggpts,cm14,cm);
         aggpts = [aggpts; pts];
 

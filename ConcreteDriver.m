@@ -10,10 +10,8 @@ cubeSize = 654;
 nDivisions = 3;
 testCubes = genCublets(cubeSize, nDivisions, startCoords, 1);              
 
-load('grainsizeresults.mat')
-results = grainsizeresults(:,1);
-sieveSz = grainsizeresults(:,2);
-aggRepo = generateDistributedRepo(repos, 10, results, sieveSz);
+load('grainsizeresults.mat');
+aggRepo = generateDistributedRepo(repos, 1000, results, sieveSz);
 [insertRepo, aggRepo] = insertAgg(aggRepo, testCubes, 27);  %Inserting aggregates into cubes and generating a new repo
 
 finalRepo = tangentPlane(insertRepo);

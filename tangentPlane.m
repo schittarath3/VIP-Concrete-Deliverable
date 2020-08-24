@@ -15,7 +15,7 @@ fields = fieldnames(repos);
 newfields = fields;
 for idx = 1:length(fields)
     orderidx = repos.(fields{idx}).cubeNum;
-    newfields(orderidx,1) = fields(orderidx); 
+    newfields(orderidx,1) = fields(idx); 
 end
 fields = newfields;
 
@@ -49,6 +49,7 @@ for idx = sequence
         %nearly 0 degrees angle.
         [~,cm] = normalize(repos.(fields{idx}).Points); pts = pts+cm;
         cnt = repos.(fields{idx}).OriginalFaces;
+        disp(repos.(fields{idx}).cubeNum)
         pts = translate2Pt(repos.(fields{idx}).cubeNum,pts,aggpts,cm14,cm);
         aggpts = [aggpts; pts];
 

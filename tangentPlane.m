@@ -15,7 +15,7 @@ fields = fieldnames(repos);
 newfields = fields;
 for idx = 1:length(fields)
     orderidx = repos.(fields{idx}).cubeNum;
-    newfields(orderidx,1) = fields(orderidx); 
+    newfields(orderidx,1) = fields(idx); 
 end
 fields = newfields;
 

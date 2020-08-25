@@ -24,7 +24,7 @@ function sphereCell = VoidSearch(aggRepo, oriCubeSize, cubeSize, targetRate, sph
     
     %Getting the coverage rate needed as an end condition
     [covRate, totalVolume] = coverageRate(aggRepo, cubeSize^3);
-    sphereCovRate = targetRate - covRate;
+    sphereCovRate = targetRate - covRate
     
     %Creating the sphereCell
     sphereCell = cell(0,0);

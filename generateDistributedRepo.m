@@ -53,16 +53,21 @@ function aggRepo = generateDistributedRepo(repos, totalAggNum, distribResults, d
             %Scaling the aggregates and getting the diameter of the
             %aggregate based on least-volume ellipsoid approximation
             curAgg = repos.(curAggName).Orientation.(oriName);
+            curAggOriginal = repos.(curAggName).OriginalPoints;
             curAggDiameter = maxDiam(curAgg);
             scaleMat = [aggSizes(randi(100, 1))/curAggDiameter 0 0; ...
                                  0 aggSizes(randi(100, 1))/curAggDiameter 0; ...
                                  0 0 aggSizes(randi(100, 1))/curAggDiameter];
             curAgg = curAgg * scaleMat;
+            curAggOriginal = curAggOriginal * scaleMat;
             newAggDiameter = maxDiam(curAgg);
+            
+            angles = linspace(-pi/8,pi/8,5);
+            curAggOriginal = Rotate(curAggOriginal, angles(oriX), angles(oriY), angles(oriZ));
             
             %Storing information into the struct
            aggRepo.(newName).Original = curAggName; %Store original name
-           aggRepo.(newName).OriginalPoints = repos.(curAggName).OriginalPoints;
+           aggRepo.(newName).OriginalPoints = curAggOriginal;
            aggRepo.(newName).OriginalFaces = repos.(curAggName).OriginalFaces;
            aggRepo.(newName).Points = curAgg;
            aggRepo.(newName).Faces = repos.(aggNames{aggRandNum}).Faces; %Store connectivity
@@ -103,4 +108,16 @@ for i = 1:length(aggpts)
     end
     end
 end
+end
+
+
+function nv = Rotate(pts,tx,ty,tz) 
+%Rotational matrix
+rx = [1 0 0; 0 cos(tx) -sin(tx); 0 sin(tx) cos(tx)];
+ry = [cos(ty) 0 sin(ty); 0 1 0; -sin(ty) 0 cos(ty)];
+rz = [cos(tz) -sin(tz) 0; sin(tz) cos(tz) 0; 0 0 1];
+rotm = rx*ry*rz;
+
+nv = rotm*pts';
+nv = nv';
 end

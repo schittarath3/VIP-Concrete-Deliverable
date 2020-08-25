@@ -50,16 +50,16 @@ for bins = 1:length(binSz)
         agg_index = aggRepoSort{bins,1}.(char(binSz_fields(aggsidxm(insertsph)))).Index;
         
         %Rewriting the coordinates for the aggregates to substitute...
-        pts = addAggRepo.(fields_agg{agg_index}).OriginalPoints;
+        pts_ = addAggRepo.(fields_agg{agg_index}).Points;
         orient = addAggRepo.(fields_agg{agg_index}).Orientation;
-        pts = translate2Center(Rotate(pts,ang(orient(1)),ang(orient(2)),ang(orient(3))),sph_cm);
+        pts = translate2Center(Rotate(pts_,ang(orient(1)),ang(orient(2)),ang(orient(3))),sph_cm);
         
         %New repository
         newfieldname = strcat('bin',num2str(bins),'_','agg',num2str(insertsph));
         sphAggRepo.(newfieldname).Original = addAggRepo.(fields_agg{agg_index}).Original;
-        sphAggRepo.(newfieldname).OriginalPoints = pts;
+        sphAggRepo.(newfieldname).OriginalPoints = addAggRepo.(fields_agg{agg_index}).OriginalPoints;
         sphAggRepo.(newfieldname).OriginalFaces = addAggRepo.(fields_agg{agg_index}).OriginalFaces;
-        sphAggRepo.(newfieldname).Points = addAggRepo.(fields_agg{agg_index}).Points;
+        sphAggRepo.(newfieldname).Points = pts;
         sphAggRepo.(newfieldname).Faces = addAggRepo.(fields_agg{agg_index}).Faces;
         sphAggRepo.(newfieldname).Orientation = addAggRepo.(fields_agg{agg_index}).Orientation;
         sphAggRepo.(newfieldname).Diameter = addAggRepo.(fields_agg{agg_index}).Diameter;

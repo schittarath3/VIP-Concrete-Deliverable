@@ -19,31 +19,21 @@ for aggs = 1:length(fields_agg)
     aggName = addAggRepo.(fields_agg{aggs});
     sieve_size = aggName.Diameter;
     
-    try
-    fit = find(binSz>=sieve_size); sphereCell_fit = fit(1);
-    catch
-    fit = find(binSz<=sieve_size); sphereCell_fit = fit(end);
-    end
-    aggRepoSort{sphereCell_fit,1}.(fields_agg{aggs}).Index = aggs;
+    fit = find(binSz>=sieve_size);
+        if ~isempty(fit)
+        sphereCell_fit = fit(1);
+        aggRepoSort{sphereCell_fit,1}.(fields_agg{aggs}).Index = aggs;
+        aggRepoSort{sphereCell_fit,1}.(fields_agg{aggs}).Diameter = aggName.Diameter;
+        end
 end
 
 %Adding each of the aggregates in the list to the appropriate sphere cell
 %by bins and generating the final repostitory...
-
 for bins = 1:length(binSz)
     binSz_fields = fieldnames(aggRepoSort{bins,1});
     len_aggs = length(binSz_fields);
     
-    total_sph = sphereCellsrepo{bins,1}(:,2);
-    len_sph = length(total_sph);
-   
-    aggsidxm = [];
-    for multiplier = 1:ceil(len_sph/len_aggs)
-        aggsidx = 1:len_aggs;
-        aggsidxm = [aggsidxm, aggsidx];
-    end
-    
-    for insertsph = 1:len_sph
+    for insertsph = 1:len_aggs
         sph_cm = cell2mat(sphereCellsrepo{bins,1}(insertsph,2));
         ang = linspace(-pi/8,pi/8,5);
         

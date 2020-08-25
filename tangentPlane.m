@@ -35,9 +35,7 @@ aggRepov2.(fields{14}).Faces = cnt14;
 aggRepov2.(fields{14}).Points = pts14;
 hold on
 
-sequence = randperm(27); %Auto-generate a random sequence of aggregates
-%that will be translated towards the center aggregate. 
-
+sequence = randperm(27);
 for idx = sequence
     if idx~=14 
         %Rotating the aggregates according the correct orientation 
@@ -49,7 +47,7 @@ for idx = sequence
         %nearly 0 degrees angle.
         [~,cm] = normalize(repos.(fields{idx}).Points); pts = pts+cm;
         cnt = repos.(fields{idx}).OriginalFaces;
-        pts = translate2Pt(repos.(fields{idx}).cubeNum,pts,aggpts,cm14,cm);
+        pts = translate2Pt(repos.(fields{idx}).cubeNum,pts,aggpts,pts14,cm14,cm);
         aggpts = [aggpts; pts];
 
         trimesh(cnt,pts(:,1),pts(:,2),pts(:,3),'EdgeColor','blue');
@@ -97,7 +95,7 @@ hold off
 end
 
 %% FUNCTION CODE
-function agg = translate2Pt(cubeidx,agg,cluster,clustercm,aggcm)
+function agg = translate2Pt(cubeidx,agg,cluster,centerpts,clustercm,aggcm)
 %Given two aggregates, the aggregates will be translated with one fixed and
 %another towards its center. The translated aggregate will attempt to
 %rotate so that the tangent planes of the two faces are 0-degrees. 
@@ -180,11 +178,10 @@ end
 %Finding if the translated aggregate touches any other aggregate or has
 %translated inside of the center aggregate using inShape.
 clusterA = alphaShape(cluster);
-tangentPts = normalize(searchNear(agg,cluster));
 locate = sum(inShape(clusterA,agg)); 
 
 try
-    result = optAngle(normalize(agg),tangentPts,restrictface1,restrictface2,rotidx);
+    result = optAngle(normalize(agg),centerpts,restrictface1,restrictface2,rotidx);
 catch
     result = 0;
 end
@@ -204,26 +201,6 @@ end
                 agg = agg - tVect; %If it is inside, move back a step size to remain outside.
             end
     end
-end
-        
-function nearestpts = searchNear(agg,cluster)
-%Find the points that the translated aggregate is near to the cluster of
-%aggregates in order to isolate the face to calculate the tangent plane.
-
-[~,centerpt] = normalize(agg);
-nearestpts = zeros(length(cluster),4);
-for i = 1:length(cluster)
-    nearestpts(i,1:4) = [norm(cluster(i,:) - centerpt), cluster(i,:)];
-end
-avgDist = mean(nearestpts(:,1));
-
-for i = 1:length(nearestpts)
-    if nearestpts(i,1) >= avgDist
-        nearestpts(i,1:4) = zeros(1,4);
-    end
-end
-nearestpts(~any(nearestpts,2),:) = [];
-nearestpts = nearestpts(:,2:4);
 end
 
  function result = optAngle(pts1,pts2,restrictface1,restrictface2,opt)

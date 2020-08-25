@@ -1,4 +1,4 @@
-function [aggRepo, agg_dist]= Sphere2Agg(aggRepo,sphereCell,results,sieveSz,totalAggs)
+function [newaggRepo, agg_dist]= Sphere2Agg(aggRepo,sphereCell,results,sieveSz,totalAggs)
 %Pack the rest of the aggregates to the original 27 following the grain
 %size distribution obtained from the 2D image analysis:
 %Inputs:
@@ -58,28 +58,14 @@ for bins = 1:maxBin
         sphereCell{bins,1}(end,1:2) = cell(1,2);
 
         %Rewriting the coordinates for the aggregates to substitute...
-<<<<<<< HEAD
-        aggRepo.(fields_agg{agg_idx}).OriginalPoints = translate2Center(pts, sph_cm);
+         newaggRepo.(fields_agg{agg_idx}).Original = aggRepo.(fields_agg{agg_idx}).Original;
+         newaggRepo.(fields_agg{agg_idx}).OriginalPoints = translate2Center(pts, sph_cm);
+         newaggRepo.(fields_agg{agg_idx}).OriginalFaces = aggRepo.(fields_agg{agg_idx}).OriginalFaces;
+         newaggRepo.(fields_agg{agg_idx}).Diameter = aggRepo.(fields_agg{agg_idx}).Diameter;
     end
     
     catch
         disp(['Fail to fit bin ' num2str(bins) '--Consider lowering the number of aggregates'])
-=======
-        pts_ = addAggRepo.(fields_agg{agg_index}).Points;
-        orient = addAggRepo.(fields_agg{agg_index}).Orientation;
-        pts = translate2Center(Rotate(pts_,ang(orient(1)),ang(orient(2)),ang(orient(3))),sph_cm);
-        
-        %New repository
-        newfieldname = strcat('bin',num2str(bins),'_','agg',num2str(insertsph));
-        sphAggRepo.(newfieldname).Original = addAggRepo.(fields_agg{agg_index}).Original;
-        sphAggRepo.(newfieldname).OriginalPoints = addAggRepo.(fields_agg{agg_index}).OriginalPoints;
-        sphAggRepo.(newfieldname).OriginalFaces = addAggRepo.(fields_agg{agg_index}).OriginalFaces;
-        sphAggRepo.(newfieldname).Points = pts;
-        sphAggRepo.(newfieldname).Faces = addAggRepo.(fields_agg{agg_index}).Faces;
-        sphAggRepo.(newfieldname).Orientation = addAggRepo.(fields_agg{agg_index}).Orientation;
-        sphAggRepo.(newfieldname).Diameter = addAggRepo.(fields_agg{agg_index}).Diameter;
-        sphAggRepo.(newfieldname).bin = addAggRepo.(fields_agg{agg_index}).bin;
->>>>>>> caeead25b9167660b42c1be4e0dace19e353766b
     end
 end
 end

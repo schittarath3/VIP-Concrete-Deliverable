@@ -1,4 +1,4 @@
-function [aggRepo, agg_dist]= Sphere2Agg(aggRepo,sphereCell,results,sieveSz,totalAggs)
+function [aggRepo, agg_dist]= sphere(aggRepo,sphereCell,results,sieveSz,totalAggs)
 %Pack the rest of the aggregates to the original 27 following the grain
 %size distribution obtained from the 2D image analysis:
 %Inputs:
@@ -60,6 +60,7 @@ for bins = 1:maxBin
         %Rewriting the coordinates for the aggregates to substitute...
         aggRepo.(fields_agg{agg_idx}).OriginalPoints = translate2Center(pts, sph_cm);
     end
+    
     catch
         disp(['Fail to fit bin ' num2str(bins) '--Consider lowering the number of aggregates'])
     end

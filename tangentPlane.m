@@ -47,7 +47,8 @@ for idx = sequence
         %nearly 0 degrees angle.
         [~,cm] = normalize(repos.(fields{idx}).Points); pts = pts+cm;
         cnt = repos.(fields{idx}).OriginalFaces;
-        pts = translate2Pt(repos.(fields{idx}).cubeNum,pts,aggpts,pts14,cm14,cm);
+        
+        pts = translate2Pt(repos.(fields{idx}).cubeNum,pts,aggpts,pts14,clustercm,cm);
         aggpts = [aggpts; pts];
 
         trimesh(cnt,pts(:,1),pts(:,2),pts(:,3),'EdgeColor','blue');

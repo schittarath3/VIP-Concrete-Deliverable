@@ -1,59 +1,67 @@
-function sphAggRepo= Sphere2Agg(addAggRepo, sphereCellsrepo)
-%Fill the sphere cells with the scaled aggregates from the generated
-%repository containing aggregates following the GSD.
+function [aggRepo, agg_dist]= Sphere2Agg(aggRepo,sphereCell,results,sieveSz,totalAggs)
+%Pack the rest of the aggregates to the original 27 following the grain
+%size distribution obtained from the 2D image analysis:
 %Inputs:
-%   addAggRepo - the repoistory with scaled aggregates
-%   sphereCellsrepo - the repository with the sphere cells and the center
-%   coordinates
-%Outputs:
-%   sphAggRepo - repository containing the new coordinates for the scaled
-%   coordinates centered at the located sphere cells.
+%   aggRepo - the generated distributed repository containing the scaled
+%   aggregates to fit inside the container.
+%   sphereCell - the generated repository containing possible empty spaces
+%   to fit the aggregates inside of the original packed 27 aggregates.
+%   results - a mx1 cell containg the lengths (bins) of the grains 
+%   sieveSz - a 1xn cell containing the results of the grain size
+%   totalAggs - total number of aggregates contained
 
-fields_agg = fieldnames(addAggRepo);
+%Determine how many aggregates can be packed to get the desired
+%distribution based on total number of aggs (user-determined):
+agg_dist = floor(totalAggs*(results/100));
+
+%Determine the total number of available sphere cells to fill
+totasph_bins = size(sphereCell,1);
+available_sph = zeros(1,totasph_bins);
+for r = 1:totasph_bins
+    available_sph(1,r) = size(sphereCell{r,1},1);
+end
+
 %Obtaining the threshold sieve size for each of the aggregates
-binSz = cell2mat(sphereCellsrepo(:,2)); 
+binSz = cell2mat(sphereCell(:,2)); 
+maxSz = binSz(end);
+maxBin = find(sieveSz <= maxSz);
+maxBin = maxBin(end);
 
-%Generating the repository of the aggregates according to their bin
-%(separated by the grain/sieve size)
-for aggs = 1:length(fields_agg)
-    aggName = addAggRepo.(fields_agg{aggs});
-    sieve_size = aggName.Diameter;
+%Sorting the aggregates repository by bin size and diameter
+fields_agg = fieldnames(aggRepo);
+for agg = 1:length(fields_agg)
+    diameter = aggRepo.(fields_agg{agg}).Diameter;
+    bin = aggRepo.(fields_agg{agg}).bin;
+    aggRepoSort{bin,1}.(fields_agg{agg}).Index = agg;
+    aggRepoSort{bin,1}.(fields_agg{agg}).Diameter = diameter;
     
-    fit = find(binSz>=sieve_size);
+    %Finding the sphere cell bin that matches with the aggregates
+    fit = find(binSz>=diameter);
         if ~isempty(fit)
         sphereCell_fit = fit(1);
-        aggRepoSort{sphereCell_fit,1}.(fields_agg{aggs}).Index = aggs;
-        aggRepoSort{sphereCell_fit,1}.(fields_agg{aggs}).Diameter = aggName.Diameter;
+        aggRepoSort{bin,1}.(fields_agg{agg}).Spherebin = sphereCell_fit;
         end
 end
 
-%Adding each of the aggregates in the list to the appropriate sphere cell
-%by bins and generating the final repostitory...
-for bins = 1:length(binSz)
-    binSz_fields = fieldnames(aggRepoSort{bins,1});
-    len_aggs = length(binSz_fields);
-    
-    for insertsph = 1:len_aggs
-        sph_cm = cell2mat(sphereCellsrepo{bins,1}(insertsph,2));
-        ang = linspace(-pi/8,pi/8,5);
+for bins = 1:maxBin
+    try
+    for aggs = 1:agg_dist(bins)
+        binSz_fields = fieldnames(aggRepoSort{bins,1});
+        agg_idx = aggRepoSort{bins,1}.(char(binSz_fields(aggs))).Index;
+        agg_sph_bin = aggRepoSort{bins,1}.(char(binSz_fields(aggs))).Spherebin;
         
-        agg_index = aggRepoSort{bins,1}.(char(binSz_fields(aggsidxm(insertsph)))).Index;
-        
+        pts = aggRepo.(fields_agg{agg_idx}).OriginalPoints;
+        sph_cm = cell2mat(sphereCell{agg_sph_bin,1}(1,2));
+
+        %Removing the sphere cell used
+        sphereCell{bins,1}(1:end-1,1:2) = sphereCell{bins,1}(2:end,1:2);
+        sphereCell{bins,1}(end,1:2) = cell(1,2);
+
         %Rewriting the coordinates for the aggregates to substitute...
-        pts = addAggRepo.(fields_agg{agg_index}).OriginalPoints;
-        orient = addAggRepo.(fields_agg{agg_index}).Orientation;
-        pts = translate2Center(Rotate(pts,ang(orient(1)),ang(orient(2)),ang(orient(3))),sph_cm);
-        
-        %New repository
-        newfieldname = strcat('bin',num2str(bins),'_','agg',num2str(insertsph));
-        sphAggRepo.(newfieldname).Original = addAggRepo.(fields_agg{agg_index}).Original;
-        sphAggRepo.(newfieldname).OriginalPoints = pts;
-        sphAggRepo.(newfieldname).OriginalFaces = addAggRepo.(fields_agg{agg_index}).OriginalFaces;
-        sphAggRepo.(newfieldname).Points = addAggRepo.(fields_agg{agg_index}).Points;
-        sphAggRepo.(newfieldname).Faces = addAggRepo.(fields_agg{agg_index}).Faces;
-        sphAggRepo.(newfieldname).Orientation = addAggRepo.(fields_agg{agg_index}).Orientation;
-        sphAggRepo.(newfieldname).Diameter = addAggRepo.(fields_agg{agg_index}).Diameter;
-        sphAggRepo.(newfieldname).bin = addAggRepo.(fields_agg{agg_index}).bin;
+        aggRepo.(fields_agg{agg_idx}).OriginalPoints = translate2Center(pts, sph_cm);
+    end
+    catch
+        disp(['Fail to fit bin ' num2str(bins) '--Consider lowering the number of aggregates'])
     end
 end
 end
@@ -75,15 +83,4 @@ dcm = center - centroid; %Distance from centroid to center
 for vertice = 1:length(datapoints)
     datapointsn(vertice,:) = datapoints(vertice,:) + dcm;
 end
-end
-
-function nv = Rotate(pts,tx,ty,tz) 
-%Rotational matrix
-rx = [1 0 0; 0 cos(tx) -sin(tx); 0 sin(tx) cos(tx)];
-ry = [cos(ty) 0 sin(ty); 0 1 0; -sin(ty) 0 cos(ty)];
-rz = [cos(tz) -sin(tz) 0; sin(tz) cos(tz) 0; 0 0 1];
-rotm = rx*ry*rz;
-
-nv = rotm*pts';
-nv = nv';
 end

@@ -14,7 +14,7 @@ load('grainsizeresults.mat');
 aggRepo = generateDistributedRepo(repos, 1000, results, sieveSz);
 [insertRepo, aggRepo] = insertAgg(aggRepo, testCubes, 27);  %Inserting aggregates into cubes and generating a new repo
 
-% finalRepo = tangentPlane(insertRepo);
+finalRepo = tangentPlane(insertRepo);
 % [finalRate, totalVolume] = coverageRate(finalRepo, 218^3);
 % % finalRepo = shrinkByOrigin(finalRepo, .10769);
 % 
@@ -34,6 +34,7 @@ function mergedRepo = mergeRepos(repoA,repoB)
         mergedRepo.(fn{i}) = repoB.(fn{i});
     end
 end
+
 function datapointsn = normalizeTo(datapoints, newCentroid)
 %Obtain the center of each aggregate
 x = datapoints(:,1);

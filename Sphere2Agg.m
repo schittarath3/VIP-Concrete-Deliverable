@@ -1,4 +1,4 @@
-function [aggRepo, agg_dist]= sphere(aggRepo,sphereCell,results,sieveSz,totalAggs)
+function [aggRepo, agg_dist]= Sphere2Agg(aggRepo,sphereCell,results,sieveSz,totalAggs)
 %Pack the rest of the aggregates to the original 27 following the grain
 %size distribution obtained from the 2D image analysis:
 %Inputs:

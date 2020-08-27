@@ -156,7 +156,7 @@ switch cubeidx
         result = optAngle(agg,adj_agg,restrictface1,restrictface2);
         agg = Rotate(normalize(agg),0,result(1),result(2)) + aggcm;
         
-    case {3,9,21,27,1,7,19,25,2,8,20,26}
+    case {3,9,21,27,1,7,19,25,2,8,20,26,27}
         %Calculate the angles between the faces of the adjacent aggregates
         %and rotate these aggregates appropriately so that there are spaces
         %between to rotate towards

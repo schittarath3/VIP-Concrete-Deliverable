@@ -1,4 +1,4 @@
-function [newaggRepo, agg_dist]= Sphere2Agg(aggRepo,sphereCell,results,sieveSz,totalAggs)
+function [newaggRepo, agg_dist, sphereCell]= Sphere2Agg(aggRepo,sphereCell,results,sieveSz,totalAggs)
 %Pack the rest of the aggregates to the original 27 following the grain
 %size distribution obtained from the 2D image analysis:
 %Inputs:
@@ -44,29 +44,31 @@ for agg = 1:length(fields_agg)
 end
 
 for bins = 1:maxBin
-    try
+    
     for aggs = 1:agg_dist(bins)
         binSz_fields = fieldnames(aggRepoSort{bins,1});
         agg_idx = aggRepoSort{bins,1}.(char(binSz_fields(aggs))).Index;
         agg_sph_bin = aggRepoSort{bins,1}.(char(binSz_fields(aggs))).Spherebin;
         
         pts = aggRepo.(fields_agg{agg_idx}).OriginalPoints;
-        sph_cm = cell2mat(sphereCell{agg_sph_bin,1}(1,2));
+        try
+            sph_cm = cell2mat(sphereCell{agg_sph_bin,1}(1,2));
+        catch
+            continue
+        end
 
         %Removing the sphere cell used
-        sphereCell{bins,1}(1:end-1,1:2) = sphereCell{bins,1}(2:end,1:2);
-        sphereCell{bins,1}(end,1:2) = cell(1,2);
+        sphereCell{agg_sph_bin,1} = sphereCell{agg_sph_bin,1}(2:end,1:2);
 
         %Rewriting the coordinates for the aggregates to substitute...
          newaggRepo.(fields_agg{agg_idx}).Original = aggRepo.(fields_agg{agg_idx}).Original;
          newaggRepo.(fields_agg{agg_idx}).OriginalPoints = translate2Center(pts, sph_cm);
          newaggRepo.(fields_agg{agg_idx}).OriginalFaces = aggRepo.(fields_agg{agg_idx}).OriginalFaces;
+         newaggRepo.(fields_agg{agg_idx}).Points = translate2Center(aggRepo.(fields_agg{agg_idx}).Points, sph_cm);
+         newaggRepo.(fields_agg{agg_idx}).Faces = aggRepo.(fields_agg{agg_idx}).Faces;
          newaggRepo.(fields_agg{agg_idx}).Diameter = aggRepo.(fields_agg{agg_idx}).Diameter;
-    end
-    
-    catch
-        disp(['Fail to fit bin ' num2str(bins) '--Consider lowering the number of aggregates'])
-    end
+  end
+
 end
 end
 

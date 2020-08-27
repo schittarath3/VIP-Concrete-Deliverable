@@ -71,8 +71,8 @@ for idx = 1:length(sequence)
     aggpts = [aggpts; newpts];
 
         trimesh(cnt,pts(:,1),pts(:,2),pts(:,3),'EdgeColor','blue');
-        aggRepov2.(fields{idx}).Faces = cnt;
-        aggRepov2.(fields{idx}).Points = pts;
+        aggRepov2.(fields{aggNum}).Faces = cnt;
+        aggRepov2.(fields{aggNum}).Points = pts;
         hold on
         xlabel('x'); ylabel('y'); zlabel('z');
         axis equal;
@@ -156,7 +156,7 @@ switch cubeidx
         result = optAngle(agg,adj_agg,restrictface1,restrictface2);
         agg = Rotate(normalize(agg),0,result(1),result(2)) + aggcm;
         
-    case {3,9,21,27,1,7,19,25,2,8,20,26}
+    case {3,9,21,27,1,7,19,25,2,8,20,26,27}
         %Calculate the angles between the faces of the adjacent aggregates
         %and rotate these aggregates appropriately so that there are spaces
         %between to rotate towards

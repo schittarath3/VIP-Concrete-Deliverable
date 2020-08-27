@@ -25,9 +25,12 @@ fields = newfields;
 figure(1)
 ang = linspace(-pi/8,pi/8,5);
 rotOrient = repos.(fields{14}).Orientation;
+cm = zeros(27,3);
 pts14 = Rotate(repos.(fields{14}).OriginalPoints,ang(rotOrient(1)),ang(rotOrient(2)),ang(rotOrient(3)));
-[~,cm14] = normalize(repos.(fields{14}).Points);
-pts14 = pts14 + cm14; aggpts = pts14;
+[~,cm(14,1:3)] = normalize(repos.(fields{14}).Points);
+pts14 = pts14 + cm(14); 
+pts_index = ones(length(pts14),1)*14;
+aggpts = [pts14, pts_index];
 cnt14 = repos.(fields{14}).OriginalFaces;
 trimesh(cnt14,pts14(:,1),pts14(:,2),pts14(:,3),'EdgeColor','blue');
 
@@ -35,21 +38,37 @@ aggRepov2.(fields{14}).Faces = cnt14;
 aggRepov2.(fields{14}).Points = pts14;
 hold on
 
-sequence = randperm(27);
-for idx = sequence
-    if idx~=14 
-        %Rotating the aggregates according the correct orientation 
-        rotaOrient = repos.(fields{idx}).Orientation;
-        pts = Rotate(repos.(fields{idx}).OriginalPoints,ang(rotaOrient(1)),ang(rotaOrient(2)),ang(rotaOrient(3)));
+sequence = [5,17,13,11,15,23,6,12,18,24,4,10,16,22,1,2,3,7,8,9,19,20,21,25,26,27];
+for idx = 1:length(sequence)
+    %Rotating the aggregates according the correct orientation 
+    aggNum = sequence(idx);
+    rotaOrient = repos.(fields{aggNum}).Orientation;
+    pts = Rotate(repos.(fields{aggNum}).OriginalPoints,ang(rotaOrient(1)),ang(rotaOrient(2)),ang(rotaOrient(3)));
     
-        %Translate the added aggregates towards the center aggregate,
-        %making sure that the respective tangent planes are aligned at
-        %nearly 0 degrees angle.
-        [~,cm] = normalize(repos.(fields{idx}).Points); pts = pts+cm;
-        cnt = repos.(fields{idx}).OriginalFaces;
+    %Translate the added aggregates towards the center aggregate,
+    %making sure that the respective tangent planes are aligned at
+    %nearly 0 degrees angle.
+    [~,cm(aggNum,1:3)] = normalize(repos.(fields{aggNum}).Points); pts = pts+cm(aggNum,1:3);
         
-        pts = translate2Pt(repos.(fields{idx}).cubeNum,pts,aggpts,pts14,clustercm,cm);
-        aggpts = [aggpts; pts];
+    if idx<=6
+        pts = translate2Pt(repos.(fields{aggNum}).cubeNum,pts,aggpts,cm(aggNum,1:3),14,cm(14,1:3));
+    elseif idx>6 && idx<=14
+        pts = translate2Pt(repos.(fields{aggNum}).cubeNum,pts,aggpts,cm(aggNum,1:3),15,cm(14,1:3));
+    elseif idx>14 && idx<=16
+        pts = translate2Pt(repos.(fields{aggNum}).cubeNum,pts,aggpts,cm(aggNum,1:3),13,cm(14,1:3));
+    elseif idx==17 && idx<=19
+        pts = translate2Pt(repos.(fields{aggNum}).cubeNum,pts,aggpts,cm(aggNum,1:3),[],cm(14,1:3));
+    elseif idx==20 && idx<=21
+        pts = translate2Pt(repos.(fields{aggNum}).cubeNum,pts,aggpts,cm(aggNum,1:3),[],cm(14,1:3));
+    elseif idx==22 && idx<=24
+        pts = translate2Pt(repos.(fields{aggNum}).cubeNum,pts,aggpts,cm(aggNum,1:3),[],cm(14,1:3));
+    else
+        pts = translate2Pt(repos.(fields{aggNum}).cubeNum,pts,aggpts,cm(aggNum,1:3),[],cm(14,1:3));
+    end
+    cnt = repos.(fields{aggNum}).OriginalFaces;
+    pts_index = ones(length(pts),1)*aggNum;
+    newpts = [pts, pts_index];
+    aggpts = [aggpts; newpts];
 
         trimesh(cnt,pts(:,1),pts(:,2),pts(:,3),'EdgeColor','blue');
         aggRepov2.(fields{idx}).Faces = cnt;
@@ -57,7 +76,6 @@ for idx = sequence
         hold on
         xlabel('x'); ylabel('y'); zlabel('z');
         axis equal;
-    end
 end
 
 %Defining the maximum dimension of the imaginary box that the aggregates
@@ -77,13 +95,14 @@ for addAgg = 28:length(fields)
     
     %Randomly rotate the aggregate by a small angle
     pts = pts+Rotate(cm,pi*(1/ randi([5 15],1)),pi*(1/ randi([5 15],1)),pi*(1/randi([5 15],1)));
-    pts = translate2Pt(repos.(fields{addAgg}).cubeNum,pts,aggpts,cm14,cm);
+    pts = translate2Pt(repos.(fields{addAgg}).cubeNum,pts,aggpts,cm(aggNum,1:3),[],cm(14,1:3));
 
     %Checking if the aggregates are translated inside of the box. Any
     %aggregates that are too big for the defined box will be removed.
     if max(pts(:,1)) > maxX || min(pts(:,1)) < minX || max(pts(:,2)) > maxY || min(pts(:,2)) < minY || max(pts(:,3)) > maxZ || max(pts(:,3)) < minZ
         continue
     else
+        
         aggpts = [aggpts; pts];
         cnt = repos.(fields{addAgg}).OriginalFaces;
         aggRepov2.(fields{addAgg}).Faces = cnt;
@@ -96,7 +115,7 @@ hold off
 end
 
 %% FUNCTION CODE
-function agg = translate2Pt(cubeidx,agg,cluster,centerpts,clustercm,aggcm)
+function agg = translate2Pt(cubeidx,agg,cluster,aggcm,adj_aggnum,target)
 %Given two aggregates, the aggregates will be translated with one fixed and
 %another towards its center. The translated aggregate will attempt to
 %rotate so that the tangent planes of the two faces are 0-degrees. 
@@ -106,108 +125,142 @@ function agg = translate2Pt(cubeidx,agg,cluster,centerpts,clustercm,aggcm)
 %   representing the (x,y,z) coordinates
 %   cluster - the fixed aggregate or cluster of aggregate with the columns
 %   representing the (x,y,z) coordinates
-%   clustercm - the center point of the aggregate/cluster
+%   target - the point the aggregate shifts towards
 %   aggcm - the center point of the translated aggregate
 
 %The selected face of the aggregates depending on their position. This face
 %tells the code which face it will calculate the normal vector of.
 switch cubeidx
-    case {2, 11, 20}
-        restrictface1 = [2 3 1 1]; rotidx = 2;
-        if cubeidx == 2
-            restrictface2 = [1 2 3 4];
-        elseif cubeidx == 11
-            restrictface2 = [2 3 1 3];
-        elseif cubeidx == 20
-            restrictface2 = [1 2 3 2];
-        end
-        
-    case {8, 17, 26}
-        restrictface1 = [2 1 3 3]; rotidx = 2;
-        if cubeidx == 8
-            restrictface2 = [1 2 3 3];
-        elseif cubeidx == 17
-            restrictface2 = [2 3 1 1];
-        elseif cubeidx == 26
-            restrictface2 = [1 3 2 1];
-        end
-        
-    case 13
-        restrictface1 = [3 2 1 1];
-        restrictface2 = [3 2 1 4];
-        rotidx = 3;
-        
-    case 15
-        restrictface1 = [3 2 1 4];
-        restrictface2 = [3 2 1 1];
-        rotidx = 3;
-        
-    case {1, 4, 7, 10, 16, 19, 22, 25}
-        restrictface1 = [3 1 2 1]; rotidx = 2;
-        if cubeidx == 1 || cubeidx == 4 || cubeidx == 7
+    case {5,11,13,15,17,23,6,12,18,24,4,10,16,22}
+        if cubeidx == 4 || cubeidx == 5 || cubeidx == 6
+            restrictface1 = [1 2 3 1];
             restrictface2 = [1 3 2 3];
-        elseif cubeidx == 19 || cubeidx == 22 || cubeidx == 25
-            restrictface2 = [1 3 2 2];
-        elseif cubeidx == 16
-            restrictface2 = [2 1 3 2];
-        elseif cubeidx == 10
-            restrictface2 = [2 1 3 3];
+            rotidx = 2;
+        elseif cubeidx == 10 || cubeidx == 11 || cubeidx == 12
+            restrictface1 = [1 2 3 1];
+            restrictface2 = [1 3 2 3];
+            rotidx = 2;
+        elseif cubeidx == 13
+            restrictface1 = [3 2 1 1];
+            restrictface2 = [3 2 1 4];
+            rotidx = 3;
+        elseif cubeidx ==15
+            restrictface1 = [3 2 1 4];
+            restrictface2 = [3 2 1 1];
+            rotidx = 3;
+        elseif cubeidx == 16 || cubeidx == 17 || cubeidx == 18
+            restrictface1 = [1 2 3 1];
+            restrictface2 = [1 3 2 3];
+            rotidx = 2;
+        elseif cubeidx == 22 || cubeidx == 23 || cubeidx == 24
+            restrictface1 = [1 3 2 3];
+            restrictface2 = [1 2 3 1];
+            rotidx = 2;
         end
         
-    case {3, 6, 9, 12, 18, 21, 24, 27}
-        restrictface1 = [3 2 1 3]; rotidx = 2;
-        if cubeidx == 3 || cubeidx == 6 || cubeidx == 9
-            restrictface2 = [1 3 2 4]';
-        elseif cubeidx == 12 || cubeidx == 18 || cubeidx == 21
-            restrictface2 = [2 1 3 3];
-        elseif cubeidx == 24
-            restrictface2 = [2 3 1 1];
-        elseif cubeidx == 27
-            restrictface2 = [2 3 1 2];
-        end
-        
-    case 23 
-        restrictface1 = [1 3 2 3];
-        restrictface2 = [1 2 3 1];
-        rotidx = 2;
-    case 5 
-        restrictface1 = [1 2 3 1];
-        restrictface2 = [1 3 2 3];
-        rotidx = 2;
-end
+            adj_agg = cluster(find(cluster(:,4) == adj_aggnum),1:3);
+%             [~,target] = normalize(adj_agg);
+            result = optAngle(normalize(agg),adj_agg,restrictface1,restrictface2,rotidx);
 
-%Finding if the translated aggregate touches any other aggregate or has
-%translated inside of the center aggregate using inShape.
-clusterA = alphaShape(cluster);
-locate = sum(inShape(clusterA,agg)); 
-
-try
-    result = optAngle(normalize(agg),centerpts,restrictface1,restrictface2,rotidx);
-catch
-    result = 0;
-end
-    if rotidx == 2
-        agg = Rotate(normalize(agg),0,result,0) + aggcm;
-    else
-        agg = Rotate(normalize(agg),0,0,result) + aggcm;
-    end
-
-    while locate == 0 %0 means that no points are touching (none of the points are inside)
-        [~,aggcm] = normalize(agg);
-        tVect = (clustercm - aggcm)./75; %The translation vector defined as the direction between 
-        %center points of the fixed aggregates/cluster and translating aggregate.
-        agg = agg + tVect; %Slowly approaching towards the center
-        locate = sum(inShape(clusterA,agg));
-            if locate~=0
-                agg = agg - tVect; %If it is inside, move back a step size to remain outside.
+            if rotidx == 2
+                agg = Rotate(normalize(agg),0,result,0) + aggcm;
+            else
+                agg = Rotate(normalize(agg),0,0,result) + aggcm;
             end
+        
+    case {3,9,21,27,1,7,19,25,2,8,20,26}
+        %Calculate the angles between the faces of the adjacent aggregates
+        %and rotate these aggregates appropriately so that there are spaces
+        %between to rotate towards
+            if cubeidx>=1 && cubeidx <=3
+                adj_aggnum1 = cubeidx+3; 
+                adj_aggnum2 = cubeidx+9;
+                adj_restrictface1 = [2 3 1 4]; %front side
+                adj_restrictface2 = [1 3 2 1]; %left side
+                restrictface1 = [2 3 1 1]; %back side
+                restrictface2 = [1 3 2 4]; %right side
+            elseif cubeidx>=7 && cubeidx <=9
+                adj_aggnum1 = cubeidx-3;
+                adj_aggnum2 = cubeidx+9;
+                adj_restrictface1 = [2 3 1 1]; %back side
+                adj_restrictface2 = [1 3 2 1]; %left side
+                restrictface1 = [2 3 1 4]; %front side
+                restrictface2 = [1 3 2 4]; %right side
+            elseif cubeidx>=19 && cubeidx <=21
+                adj_aggnum1 = cubeidx-9;
+                adj_aggnum2 = cubeidx+3;
+                adj_restrictface1 = [1 3 2 4]; %right side
+                adj_restrictface2 = [2 3 1 4]; %front side
+                restrictface1 = [1 3 2 1]; %left side
+                restrictface2 = [2 3 1 1]; %back side
+            elseif cubeidx>=25 && cubeidx <=27
+                adj_aggnum1 = cubeidx-3;
+                adj_aggnum2 = cubeidx-9;
+                adj_restrictface1 = [2 3 1 1]; %back side
+                adj_restrictface2 = [1 3 2 4]; %right side
+                restrictface1 = [2 3 1 4]; %front side
+                restrictface2 = [1 3 2 1]; %left side
+            end
+        adj_agg1 = cluster(find(cluster(:,4) == adj_aggnum1),1:3);
+        adj_agg2 = cluster(find(cluster(:,4) == adj_aggnum2),1:3);
+        
+        %Calculate the angle between the adjacent aggregates
+        adj_ang1 = tangentP(adj_agg1,adj_restrictface1,[0 0 0],false);
+        adj_ang2 = tangentP(adj_agg2,adj_restrictface2,[0 0 0],false);
+        adj_ang = anglebwPlanes(adj_ang1,adj_ang2);
+        
+        %Calculate the angle between the normal vectors of the aggregate of
+        %interest:
+        result = matchAngle(agg,agg,restrictface1,restrictface2,adj_ang);
+        agg = Rotate(normalize(agg),0,result(1),result(2)) + aggcm;
+end
+        %Finding if the translated aggregate touches any other aggregate or has
+        %translated inside of the center aggregate using inShape.
+        clusterA = alphaShape(cluster(:,1:3));
+        locate = sum(inShape(clusterA,agg)); 
+
+            iter = 0;
+            while locate == 0 %0 means that no points are touching (none of the points are inside)
+                iter = iter+1;
+%                 aggcm
+%                 target
+                tVect = (target - aggcm)./75; %The translation vector defined as the direction between 
+                %center points of the fixed aggregates/cluster and translating aggregate.
+                agg = agg + tVect; %Slowly approaching towards the center
+                locate = sum(inShape(clusterA,agg));
+                    if locate~=0
+                        agg = agg - tVect; %If it is inside, move back a step size to remain outside.
+                    elseif iter == 500
+                        break
+                    end
+            end
+end
+
+function result = matchAngle(pts1,pts2,restrictface1,restrictface2,match_ang)
+a = linspace(-pi,pi,150);
+optimalangle = [];
+plane1 = tangentP(pts1,restrictface1,[0 0 0],false);
+
+for ang_z = 1:length(a) %Testing each rotation to find the optimal.
+    rots_z = a(ang_z);
+    parfor ang_y = 1:length(a)
+    rots_y = a(ang_y);
+    plane2 = tangentP(pts2,restrictface2,[0, rots_y, rots_z,false],false);
+    radt = anglebwPlanes(plane1,plane2);
+    diff = abs(match_ang - radt);
+    opt_ang_info = [diff, ang_z, ang_y];
+    optimalangle = [optimalangle; opt_ang_info];
     end
+end
+
+[~,residx] = min(optimalangle);
+result = optimalangle(residx,2:3);
 end
 
  function result = optAngle(pts1,pts2,restrictface1,restrictface2,opt)
 %Find the optimal angle to rotate the translating aggregate so that the two
 %calculated tangent planes are at 0-degrees with each other.
-a = linspace(-pi/3,pi/3);
+a = linspace(-pi/2,pi/2);
 optimalangle = [];
 plane1 = tangentP(pts1,restrictface1,[0 0 0],false);
 
@@ -245,7 +298,7 @@ split1 = option(1);
 split2 = option(2);
 split3 = option(3);
 restrictface = option(4);
-pts1 = Rotate(pts1,angle(1),angle(2),angle(3));
+pts1 = Rotate(normalize(pts1),angle(1),angle(2),angle(3));
 
 %Generating the tangent line of the top...
 [~,idx] = sort(pts1(:,split1));
@@ -293,7 +346,7 @@ r0 = newpts1(minidx,:);
 ptsX = [];
 for i = 1:length(newpts1)
     difX= newpts1(i,split2) - r0(split2);
-    if abs(difX) < 25
+    if abs(difX) < 45
         term = newpts1(i,:);
         ptsX = [ptsX; term];
     end
@@ -307,7 +360,7 @@ WidV = ptsX(maxY,:) - ptsX(minY,:);
 ptsY = [];
 for i = 1:length(newpts1)
     difY= newpts1(i,1) - r0(split3);
-    if abs(difY) < 25
+    if abs(difY) < 45
         term = newpts1(i,:);
         ptsY = [ptsY; term];
     end

@@ -135,38 +135,26 @@ switch cubeidx
         if cubeidx == 4 || cubeidx == 5 || cubeidx == 6
             restrictface1 = [1 2 3 1];
             restrictface2 = [1 3 2 3];
-            rotidx = 2;
         elseif cubeidx == 10 || cubeidx == 11 || cubeidx == 12
             restrictface1 = [1 2 3 1];
             restrictface2 = [1 3 2 3];
-            rotidx = 2;
         elseif cubeidx == 13
             restrictface1 = [3 2 1 1];
             restrictface2 = [3 2 1 4];
-            rotidx = 3;
         elseif cubeidx ==15
             restrictface1 = [3 2 1 4];
             restrictface2 = [3 2 1 1];
-            rotidx = 3;
         elseif cubeidx == 16 || cubeidx == 17 || cubeidx == 18
             restrictface1 = [1 2 3 1];
             restrictface2 = [1 3 2 3];
-            rotidx = 2;
         elseif cubeidx == 22 || cubeidx == 23 || cubeidx == 24
             restrictface1 = [1 3 2 3];
             restrictface2 = [1 2 3 1];
-            rotidx = 2;
         end
         
-            adj_agg = cluster(find(cluster(:,4) == adj_aggnum),1:3);
-%             [~,target] = normalize(adj_agg);
-            result = optAngle(normalize(agg),adj_agg,restrictface1,restrictface2,rotidx);
-
-            if rotidx == 2
-                agg = Rotate(normalize(agg),0,result,0) + aggcm;
-            else
-                agg = Rotate(normalize(agg),0,0,result) + aggcm;
-            end
+        adj_agg = cluster(find(cluster(:,4) == adj_aggnum),1:3);
+        result = optAngle(agg,adj_agg,restrictface1,restrictface2);
+        agg = Rotate(normalize(agg),0,result(1),result(2)) + aggcm;
         
     case {3,9,21,27,1,7,19,25,2,8,20,26}
         %Calculate the angles between the faces of the adjacent aggregates
@@ -237,7 +225,7 @@ end
 end
 
 function result = matchAngle(pts1,pts2,restrictface1,restrictface2,match_ang)
-a = linspace(-pi,pi,150);
+a = linspace(-pi/3,pi/3,150);
 optimalangle = [];
 plane1 = tangentP(pts1,restrictface1,[0 0 0],false);
 
@@ -245,7 +233,7 @@ for ang_z = 1:length(a) %Testing each rotation to find the optimal.
     rots_z = a(ang_z);
     parfor ang_y = 1:length(a)
     rots_y = a(ang_y);
-    plane2 = tangentP(pts2,restrictface2,[0, rots_y, rots_z,false],false);
+    plane2 = tangentP(pts2,restrictface2,[0, rots_y, rots_z],false);
     radt = anglebwPlanes(plane1,plane2);
     diff = abs(match_ang - radt);
     opt_ang_info = [diff, ang_z, ang_y];
@@ -253,30 +241,30 @@ for ang_z = 1:length(a) %Testing each rotation to find the optimal.
     end
 end
 
-[~,residx] = min(optimalangle);
+[~,residx] = min(optimalangle(:,1));
 result = optimalangle(residx,2:3);
 end
 
  function result = optAngle(pts1,pts2,restrictface1,restrictface2,opt)
 %Find the optimal angle to rotate the translating aggregate so that the two
 %calculated tangent planes are at 0-degrees with each other.
-a = linspace(-pi/2,pi/2);
+a = linspace(-pi/3,pi/3);
 optimalangle = [];
 plane1 = tangentP(pts1,restrictface1,[0 0 0],false);
 
-parfor ang = 1:length(a) %Testing each rotation to find the optimal.
-    if opt == 2 %y-axis
-        rots = [0, a(ang), 0];
-    else 
-        rots = [0, 0, a(ang)];
-    end
-    plane2 = tangentP(pts2,restrictface2,rots,false);
+for ang_z = 1:length(a) %Testing each rotation to find the optimal.
+    rots_z = a(ang_z);
+    parfor ang_y = 1:length(a)
+    rots_y = a(ang_y);
+    plane2 = tangentP(pts2,restrictface2,[0, rots_y, rots_z],false);
     radt = anglebwPlanes(plane1,plane2);
-    optimalangle = [optimalangle; radt];
+    opt_ang_info = [radt, ang_z, ang_y];
+    optimalangle = [optimalangle; opt_ang_info]
+    end
 end
 
-[~,idx] = min(optimalangle);
-result = a(idx);
+[~,residx] = min(optimalangle(:,1));
+result = optimalangle(residx,2:3);
 end
 
 function result = anglebwPlanes(normvec1,normvec2)
@@ -346,7 +334,7 @@ r0 = newpts1(minidx,:);
 ptsX = [];
 for i = 1:length(newpts1)
     difX= newpts1(i,split2) - r0(split2);
-    if abs(difX) < 45
+    if abs(difX) < 55
         term = newpts1(i,:);
         ptsX = [ptsX; term];
     end
@@ -360,7 +348,7 @@ WidV = ptsX(maxY,:) - ptsX(minY,:);
 ptsY = [];
 for i = 1:length(newpts1)
     difY= newpts1(i,1) - r0(split3);
-    if abs(difY) < 45
+    if abs(difY) < 55
         term = newpts1(i,:);
         ptsY = [ptsY; term];
     end

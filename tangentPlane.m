@@ -225,7 +225,7 @@ end
 end
 
 function result = matchAngle(pts1,pts2,restrictface1,restrictface2,match_ang)
-a = linspace(-pi/3,pi/3,150);
+a = linspace(-pi/3,pi/3,50);
 optimalangle = [];
 plane1 = tangentP(pts1,restrictface1,[0 0 0],false);
 
@@ -248,7 +248,7 @@ end
  function result = optAngle(pts1,pts2,restrictface1,restrictface2,opt)
 %Find the optimal angle to rotate the translating aggregate so that the two
 %calculated tangent planes are at 0-degrees with each other.
-a = linspace(-pi/3,pi/3);
+a = linspace(-pi/3,pi/3,50);
 optimalangle = [];
 plane1 = tangentP(pts1,restrictface1,[0 0 0],false);
 
@@ -334,7 +334,7 @@ r0 = newpts1(minidx,:);
 ptsX = [];
 for i = 1:length(newpts1)
     difX= newpts1(i,split2) - r0(split2);
-    if abs(difX) < 55
+    if abs(difX) < 65
         term = newpts1(i,:);
         ptsX = [ptsX; term];
     end
@@ -348,7 +348,7 @@ WidV = ptsX(maxY,:) - ptsX(minY,:);
 ptsY = [];
 for i = 1:length(newpts1)
     difY= newpts1(i,1) - r0(split3);
-    if abs(difY) < 55
+    if abs(difY) < 65
         term = newpts1(i,:);
         ptsY = [ptsY; term];
     end

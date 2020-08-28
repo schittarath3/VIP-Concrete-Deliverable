@@ -22,7 +22,7 @@ finalRepo = tangentPlane(insertRepo);
 % %Converting points into Repo into STL then plotting STL
 % delete('STL Files\Aggregates Out\*.stl')
 % plotSTL('STL Files\Aggregates Out');
-% toc
+toc
 
 %% Functions
 function mergedRepo = mergeRepos(repoA,repoB)

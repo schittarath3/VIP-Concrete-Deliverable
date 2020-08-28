@@ -1,4 +1,4 @@
-function aggRepov2 = tangentPlane(repos)
+function aggRepo = tangentPlane(repos)
 %Generate a repository with the coordinates of the packed aggregates by
 %calculating the normal vectors of the tangent plane for a selected face of
 %the aggregates.
@@ -51,29 +51,40 @@ for idx = 1:length(sequence)
     [~,cm(aggNum,1:3)] = normalize(repos.(fields{aggNum}).Points); pts = pts+cm(aggNum,1:3);
         
     if idx<=6
-        pts = translate2Pt(repos.(fields{aggNum}).cubeNum,pts,aggpts,cm(aggNum,1:3),14,cm(14,1:3));
+        [pts, result] = translate2Pt(repos.(fields{aggNum}).cubeNum,pts,aggpts,cm(aggNum,1:3),14,cm(14,1:3));
     elseif idx>6 && idx<=14
-        pts = translate2Pt(repos.(fields{aggNum}).cubeNum,pts,aggpts,cm(aggNum,1:3),15,cm(14,1:3));
+        [pts, result] = translate2Pt(repos.(fields{aggNum}).cubeNum,pts,aggpts,cm(aggNum,1:3),15,cm(14,1:3));
     elseif idx>14 && idx<=16
-        pts = translate2Pt(repos.(fields{aggNum}).cubeNum,pts,aggpts,cm(aggNum,1:3),13,cm(14,1:3));
+        [pts, result] = translate2Pt(repos.(fields{aggNum}).cubeNum,pts,aggpts,cm(aggNum,1:3),13,cm(14,1:3));
     elseif idx==17 && idx<=19
-        pts = translate2Pt(repos.(fields{aggNum}).cubeNum,pts,aggpts,cm(aggNum,1:3),[],cm(14,1:3));
+        [pts, result] = translate2Pt(repos.(fields{aggNum}).cubeNum,pts,aggpts,cm(aggNum,1:3),[],cm(14,1:3));
     elseif idx==20 && idx<=21
-        pts = translate2Pt(repos.(fields{aggNum}).cubeNum,pts,aggpts,cm(aggNum,1:3),[],cm(14,1:3));
+        [pts, result] = translate2Pt(repos.(fields{aggNum}).cubeNum,pts,aggpts,cm(aggNum,1:3),[],cm(14,1:3));
     elseif idx==22 && idx<=24
-        pts = translate2Pt(repos.(fields{aggNum}).cubeNum,pts,aggpts,cm(aggNum,1:3),[],cm(14,1:3));
+        [pts, result] = translate2Pt(repos.(fields{aggNum}).cubeNum,pts,aggpts,cm(aggNum,1:3),[],cm(14,1:3));
     else
-        pts = translate2Pt(repos.(fields{aggNum}).cubeNum,pts,aggpts,cm(aggNum,1:3),[],cm(14,1:3));
+        [pts, result] = translate2Pt(repos.(fields{aggNum}).cubeNum,pts,aggpts,cm(aggNum,1:3),[],cm(14,1:3));
     end
     cnt = repos.(fields{aggNum}).OriginalFaces;
     pts_index = ones(length(pts),1)*aggNum;
     newpts = [pts, pts_index];
     aggpts = [aggpts; newpts];
 
-        trimesh(cnt,pts(:,1),pts(:,2),pts(:,3),'EdgeColor','blue');
-        aggRepov2.(fields{aggNum}).Faces = cnt;
-        aggRepov2.(fields{aggNum}).Points = pts;
+        aggRepo.(fields{aggNum}).OriginalPoints = pts;
+        aggRepo.(fields{aggNum}).OriginalFaces = cnt;
+        
+        [~,finalcm] = normalize(pts);
+        reduce_pts = Rotate(normalize(repos.(fields{aggNum}).Points),0,result(1),result(2)) + finalcm;
+        aggRepo.(fields{aggNum}).Points = reduce_pts;
+        aggRepo.(fields{aggNum}).Faces = repos.(fields{aggNum}).Faces;
+        aggRepo.(fields{aggNum}).Orientation = repos.(fields{aggNum}).Orientation;
+        aggRepo.(fields{aggNum}).Diameter = repos.(fields{aggNum}).Diameter;
+        aggRepo.(fields{aggNum}).bin= repos.(fields{aggNum}).bin;
+        aggRepo.(fields{aggNum}).cubeNum= repos.(fields{aggNum}).cubeNum;
+
+        trimesh(repos.(fields{aggNum}).Faces,reduce_pts(:,1),reduce_pts(:,2),reduce_pts(:,3),'EdgeColor','blue');
         hold on
+        
         xlabel('x'); ylabel('y'); zlabel('z');
         axis equal;
 end
@@ -115,7 +126,7 @@ hold off
 end
 
 %% FUNCTION CODE
-function agg = translate2Pt(cubeidx,agg,cluster,aggcm,adj_aggnum,target)
+function [agg, result] = translate2Pt(cubeidx,agg,cluster,aggcm,adj_aggnum,target)
 %Given two aggregates, the aggregates will be translated with one fixed and
 %another towards its center. The translated aggregate will attempt to
 %rotate so that the tangent planes of the two faces are 0-degrees. 
@@ -236,7 +247,7 @@ for ang_z = 1:length(a) %Testing each rotation to find the optimal.
     plane2 = tangentP(pts2,restrictface2,[0, rots_y, rots_z],false);
     radt = anglebwPlanes(plane1,plane2);
     diff = abs(match_ang - radt);
-    opt_ang_info = [diff, ang_z, ang_y];
+    opt_ang_info = [diff, rots_y, rots_z];
     optimalangle = [optimalangle; opt_ang_info];
     end
 end
@@ -258,7 +269,7 @@ for ang_z = 1:length(a) %Testing each rotation to find the optimal.
     rots_y = a(ang_y);
     plane2 = tangentP(pts2,restrictface2,[0, rots_y, rots_z],false);
     radt = anglebwPlanes(plane1,plane2);
-    opt_ang_info = [radt, ang_z, ang_y];
+    opt_ang_info = [radt, rots_y, rots_z];
     optimalangle = [optimalangle; opt_ang_info]
     end
 end

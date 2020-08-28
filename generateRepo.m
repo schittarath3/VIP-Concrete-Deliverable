@@ -89,7 +89,7 @@ stepsz = .02;
 aggVol = abs(stlVolume(nv',nf'));
 aggVf = meshv./aggVol;
 
-volfract = .80; %Ideal volume fraction, this is the finite number that will stop
+volfract = .95; %Ideal volume fraction, this is the finite number that will stop
 %the aggregate from further reducing. If the mesh is too reduced, it will
 %be inside of the original and be too small.
 while aggVf > volfract

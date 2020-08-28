@@ -32,10 +32,17 @@ pts14 = pts14 + cm(14);
 pts_index = ones(length(pts14),1)*14;
 aggpts = [pts14, pts_index];
 cnt14 = repos.(fields{14}).OriginalFaces;
-trimesh(cnt14,pts14(:,1),pts14(:,2),pts14(:,3),'EdgeColor','blue');
 
-aggRepov2.(fields{14}).Faces = cnt14;
-aggRepov2.(fields{14}).Points = pts14;
+aggRepo.(fields{14}).OriginalFaces = cnt14;
+aggRepo.(fields{14}).OriginalPoints = pts14;
+aggRepo.(fields{14}).Points = repos.(fields{14}).Points;
+aggRepo.(fields{14}).Faces = repos.(fields{14}).Faces;
+aggRepo.(fields{14}).Orientation = repos.(fields{14}).Orientation;
+aggRepo.(fields{14}).Diameter = repos.(fields{14}).Diameter;
+aggRepo.(fields{14}).bin= repos.(fields{14}).bin;
+aggRepo.(fields{14}).cubeNum= repos.(fields{14}).cubeNum;
+
+trimesh(cnt14,pts14(:,1),pts14(:,2),pts14(:,3),'EdgeColor','blue');
 hold on
 
 sequence = [5,17,13,11,15,23,6,12,18,24,4,10,16,22,1,2,3,7,8,9,19,20,21,25,26,27];

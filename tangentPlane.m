@@ -7,7 +7,7 @@ function aggRepo = tangentPlane(repos)
 %   containing their position number, coordinates, and the connectivity
 %   list generated from read stl. 
 %Outputs:
- %  aggRepov2 - the new repository of the aggregates with the new
+ %  aggRepo - the new repository of the aggregates with the new
  %  coordinates of the packed aggregates.
 fields = fieldnames(repos);
 
@@ -19,19 +19,22 @@ for idx = 1:length(fields)
 end
 fields = newfields;
 
+%Zero matrix to store each of the aggregates center...
+cm = zeros(27,3);
+%Selection of angles
+ang = linspace(-pi/8,pi/8,5);
+
 %Defining the center aggregate where successive aggregates will be added by
 %translating towards it (this is defined as the 14th position in the cube
 %cells).
 figure(1)
-ang = linspace(-pi/8,pi/8,5);
 rotOrient = repos.(fields{14}).Orientation;
-cm = zeros(27,3);
 pts14 = Rotate(repos.(fields{14}).OriginalPoints,ang(rotOrient(1)),ang(rotOrient(2)),ang(rotOrient(3)));
+cnt14 = repos.(fields{14}).OriginalFaces;
 [~,cm(14,1:3)] = normalize(repos.(fields{14}).Points);
 pts14 = pts14 + cm(14); 
 pts_index = ones(length(pts14),1)*14;
 aggpts = [pts14, pts_index];
-cnt14 = repos.(fields{14}).OriginalFaces;
 
 aggRepo.(fields{14}).OriginalFaces = cnt14;
 aggRepo.(fields{14}).OriginalPoints = pts14;
@@ -45,6 +48,7 @@ aggRepo.(fields{14}).cubeNum= repos.(fields{14}).cubeNum;
 trimesh(cnt14,pts14(:,1),pts14(:,2),pts14(:,3),'EdgeColor','blue');
 hold on
 
+%Sequence to pack each of the aggregates according to cube cell number...
 sequence = [5,17,13,11,15,23,6,12,18,24,4,10,16,22,1,2,3,7,8,9,19,20,21,25,26,27];
 for idx = 1:length(sequence)
     %Rotating the aggregates according the correct orientation 
@@ -63,12 +67,6 @@ for idx = 1:length(sequence)
         [pts, result] = translate2Pt(repos.(fields{aggNum}).cubeNum,pts,aggpts,cm(aggNum,1:3),15,cm(14,1:3));
     elseif idx>14 && idx<=16
         [pts, result] = translate2Pt(repos.(fields{aggNum}).cubeNum,pts,aggpts,cm(aggNum,1:3),13,cm(14,1:3));
-    elseif idx==17 && idx<=19
-        [pts, result] = translate2Pt(repos.(fields{aggNum}).cubeNum,pts,aggpts,cm(aggNum,1:3),[],cm(14,1:3));
-    elseif idx==20 && idx<=21
-        [pts, result] = translate2Pt(repos.(fields{aggNum}).cubeNum,pts,aggpts,cm(aggNum,1:3),[],cm(14,1:3));
-    elseif idx==22 && idx<=24
-        [pts, result] = translate2Pt(repos.(fields{aggNum}).cubeNum,pts,aggpts,cm(aggNum,1:3),[],cm(14,1:3));
     else
         [pts, result] = translate2Pt(repos.(fields{aggNum}).cubeNum,pts,aggpts,cm(aggNum,1:3),[],cm(14,1:3));
     end
@@ -91,7 +89,6 @@ for idx = 1:length(sequence)
 
         trimesh(repos.(fields{aggNum}).Faces,reduce_pts(:,1),reduce_pts(:,2),reduce_pts(:,3),'EdgeColor','blue');
         hold on
-        
         xlabel('x'); ylabel('y'); zlabel('z');
         axis equal;
 end
@@ -120,7 +117,6 @@ for addAgg = 28:length(fields)
     if max(pts(:,1)) > maxX || min(pts(:,1)) < minX || max(pts(:,2)) > maxY || min(pts(:,2)) < minY || max(pts(:,3)) > maxZ || max(pts(:,3)) < minZ
         continue
     else
-        
         aggpts = [aggpts; pts];
         cnt = repos.(fields{addAgg}).OriginalFaces;
         aggRepov2.(fields{addAgg}).Faces = cnt;
@@ -132,19 +128,25 @@ end
 hold off
 end
 
-%% FUNCTION CODE
-function [agg, result] = translate2Pt(cubeidx,agg,cluster,aggcm,adj_aggnum,target)
+%% FUNCTIONS
+function [agg_pts, agg_rotate] = translate2Pt(cubeidx,agg_pts,cluster_pts,agg_cm,adj_aggnum,target)
 %Given two aggregates, the aggregates will be translated with one fixed and
 %another towards its center. The translated aggregate will attempt to
 %rotate so that the tangent planes of the two faces are 0-degrees. 
 %Inputs:
 %   cubeidx - the cube position of the aggregate
-%   agg - the translated aggregate coordinates with the columns
+%   agg_pts - the translated aggregate coordinates with the columns
 %   representing the (x,y,z) coordinates
-%   cluster - the fixed aggregate or cluster of aggregate with the columns
+%   cluster_pts - the fixed aggregate or cluster of aggregate with the columns
 %   representing the (x,y,z) coordinates
-%   target - the point the aggregate shifts towards
-%   aggcm - the center point of the translated aggregate
+%   agg_cm - the center of the aggregate
+%   adj_aggnum - the aggregate's adjacent aggregate cube cell number/index 
+%   target - the point the aggregate translates to
+%Outputs:
+%   agg_pts - the new translated aggregate coordinates with columns
+%   representing the (x,y,z) coordinates
+%   agg_rotate - the angle the aggregates rotated before translation/after
+%   tangent plane calculations.
 
 %The selected face of the aggregates depending on their position. This face
 %tells the code which face it will calculate the normal vector of.
@@ -170,9 +172,9 @@ switch cubeidx
             restrictface2 = [1 2 3 1];
         end
         
-        adj_agg = cluster(find(cluster(:,4) == adj_aggnum),1:3);
-        result = optAngle(agg,adj_agg,restrictface1,restrictface2);
-        agg = Rotate(normalize(agg),0,result(1),result(2)) + aggcm;
+        adj_agg = cluster_pts(find(cluster_pts(:,4) == adj_aggnum),1:3);
+        agg_rotate = optAngle(agg_pts,adj_agg,restrictface1,restrictface2,[]);
+        agg_pts = Rotate(normalize(agg_pts),0,agg_rotate(1),agg_rotate(2)) + agg_cm;
         
     case {3,9,21,27,1,7,19,25,2,8,20,26,27}
         %Calculate the angles between the faces of the adjacent aggregates
@@ -207,8 +209,8 @@ switch cubeidx
                 restrictface1 = [2 3 1 4]; %front side
                 restrictface2 = [1 3 2 1]; %left side
             end
-        adj_agg1 = cluster(find(cluster(:,4) == adj_aggnum1),1:3);
-        adj_agg2 = cluster(find(cluster(:,4) == adj_aggnum2),1:3);
+        adj_agg1 = cluster_pts(find(cluster_pts(:,4) == adj_aggnum1),1:3);
+        adj_agg2 = cluster_pts(find(cluster_pts(:,4) == adj_aggnum2),1:3);
         
         %Calculate the angle between the adjacent aggregates
         adj_ang1 = tangentP(adj_agg1,adj_restrictface1,[0 0 0],false);
@@ -217,32 +219,47 @@ switch cubeidx
         
         %Calculate the angle between the normal vectors of the aggregate of
         %interest:
-        result = matchAngle(agg,agg,restrictface1,restrictface2,adj_ang);
-        agg = Rotate(normalize(agg),0,result(1),result(2)) + aggcm;
+        agg_rotate = optAngle(agg_pts,agg_pts,restrictface1,restrictface2,adj_ang);
+        agg_pts = Rotate(normalize(agg_pts),0,agg_rotate(1),agg_rotate(2)) + agg_cm;
 end
         %Finding if the translated aggregate touches any other aggregate or has
         %translated inside of the center aggregate using inShape.
-        clusterA = alphaShape(cluster(:,1:3));
-        locate = sum(inShape(clusterA,agg)); 
+        clusterA = alphaShape(cluster_pts(:,1:3));
+        locate = sum(inShape(clusterA,agg_pts)); 
 
             iter = 0;
             while locate == 0 %0 means that no points are touching (none of the points are inside)
                 iter = iter+1;
-%                 aggcm
-%                 target
-                tVect = (target - aggcm)./75; %The translation vector defined as the direction between 
+                
+                %The translation vector defined as the direction between 
                 %center points of the fixed aggregates/cluster and translating aggregate.
-                agg = agg + tVect; %Slowly approaching towards the center
-                locate = sum(inShape(clusterA,agg));
+                tVect = (target - agg_cm)./75; 
+                agg_pts = agg_pts + tVect; %Slowly approaching towards the center
+                locate = sum(inShape(clusterA,agg_pts));
                     if locate~=0
-                        agg = agg - tVect; %If it is inside, move back a step size to remain outside.
-                    elseif iter == 500
-                        break
+                        agg_pts = agg_pts - tVect; %If it is inside, move back a step size to remain outside.
                     end
             end
 end
 
-function result = matchAngle(pts1,pts2,restrictface1,restrictface2,match_ang)
+function result = optAngle(pts1,pts2,restrictface1,restrictface2,match_ang)
+%The optimal angle to rotate the aggregates. Depending on the location of
+%the aggregate/cube cell number or index. Aggregates not belonging the edge
+%columns will rotate according to the adjacent aggregates while aggregates
+%near the edge will rotate so that they will fit inside the two surrounding
+%aggregates by matching the angles of the two sides of the aggregates to
+%the sides of the two adjacent aggregates
+ %Inputs:
+    %pts1 - coordinates of the first aggregate
+    %pts2 - coordinates of the second aggregate
+    %restrictface1 - vector with the order of axis to patrition first
+    %aggregate
+    %strictface2 - vector with the order of axis to partrition second
+    %aggregate
+    %match_ang - (only for edge aggregates) rotate to match the angle of
+    %the adjacent aggregates
+%Outputs:
+    %result - optimal angle to rotate the aggregate
 a = linspace(-pi/3,pi/3,50);
 optimalangle = [];
 plane1 = tangentP(pts1,restrictface1,[0 0 0],false);
@@ -253,31 +270,14 @@ for ang_z = 1:length(a) %Testing each rotation to find the optimal.
     rots_y = a(ang_y);
     plane2 = tangentP(pts2,restrictface2,[0, rots_y, rots_z],false);
     radt = anglebwPlanes(plane1,plane2);
-    diff = abs(match_ang - radt);
-    opt_ang_info = [diff, rots_y, rots_z];
-    optimalangle = [optimalangle; opt_ang_info];
+    
+    if ~isempty(match_ang)
+        diff = abs(match_ang - radt);
+        opt_ang_info = [diff, rots_y, rots_z];
+    else
+        opt_ang_info = [radt, rots_y, rots_z];
     end
-end
-
-[~,residx] = min(optimalangle(:,1));
-result = optimalangle(residx,2:3);
-end
-
- function result = optAngle(pts1,pts2,restrictface1,restrictface2,opt)
-%Find the optimal angle to rotate the translating aggregate so that the two
-%calculated tangent planes are at 0-degrees with each other.
-a = linspace(-pi/3,pi/3,50);
-optimalangle = [];
-plane1 = tangentP(pts1,restrictface1,[0 0 0],false);
-
-for ang_z = 1:length(a) %Testing each rotation to find the optimal.
-    rots_z = a(ang_z);
-    parfor ang_y = 1:length(a)
-    rots_y = a(ang_y);
-    plane2 = tangentP(pts2,restrictface2,[0, rots_y, rots_z],false);
-    radt = anglebwPlanes(plane1,plane2);
-    opt_ang_info = [radt, rots_y, rots_z];
-    optimalangle = [optimalangle; opt_ang_info]
+    optimalangle = [optimalangle; opt_ang_info];
     end
 end
 
@@ -287,53 +287,67 @@ end
 
 function result = anglebwPlanes(normvec1,normvec2)
 %Calculate the angle between two tangent plane using dot product.
+%Inputs:
+    %normvec1 - Normal vector of first aggregate
+    %normvec2 - Normal vector of second aggregate
+%Output:
+    %result - the angle between the two tangent planes
 magNormVec1 = norm(normvec1(1:3));
 magNormVec2 = norm(normvec2(1:3));
 
 result = acos(dot(normvec1(1:3),normvec2(1:3))./(magNormVec1.*magNormVec2));
 end
 
-function result = tangentP(pts1,option,angle,figurecheck)
+function result = tangentP(pts,axis_order,angle,figurecheck)
 %Calculate the normal vector of the tangent plane of the selected face of
 %the aggregate. To isolate the face, the object is split by the three axes
 %(x,y,z) and the face is defined by the negative or positive of the axes.
 %Using those points, the extreme point is used as an "anchor" to generate
 %the vectors that approximates the plane of the surface. 
+%Inputs:
+    %pts -  the translated aggregate coordinates with the columns
+    %           representing the (x,y,z) coordinates
+    %axis_order - the order of axis to partrition the aggregates
+    %figurecheck - plot the aggregate with the normal plane (true - plot,
+    %false - disable the figure)
+%Outputs:
+    %result - the coefficients of the tangent plane written as [A B C D]
+    %from equation Ax+By+Cz+D=0
 
-split1 = option(1);
-split2 = option(2);
-split3 = option(3);
-restrictface = option(4);
-pts1 = Rotate(normalize(pts1),angle(1),angle(2),angle(3));
+split1 = axis_order(1);
+split2 = axis_order(2);
+split3 = axis_order(3);
+restrictface = axis_order(4);
+pts = Rotate(normalize(pts),angle(1),angle(2),angle(3));
 
 %Generating the tangent line of the top...
-[~,idx] = sort(pts1(:,split1));
-sortedpts1 = pts1(idx,:);
+[~,idx] = sort(pts(:,split1));
+sortedpts1 = pts(idx,:);
 negidx = find(sortedpts1(:,split1) <= 0); 
 if restrictface ==1 || restrictface == 2 
-    newpts1 = sortedpts1(1:negidx(end,1),:); 
+    newpts = sortedpts1(1:negidx(end,1),:); 
 else
-    newpts1 = sortedpts1(negidx(end,1)+1:end,:);
+    newpts = sortedpts1(negidx(end,1)+1:end,:);
 end
 
-[~,idx] = sort(newpts1(:,split2));
-sortedpts2 = newpts1(idx,:);
+[~,idx] = sort(newpts(:,split2));
+sortedpts2 = newpts(idx,:);
 negidx = find(sortedpts2(:,split2) <= 0);
     if restrictface == 1 || restrictface == 3
-    newpts1 = sortedpts2(1:negidx(end,1)-1,:);
+    newpts = sortedpts2(1:negidx(end,1)-1,:);
     else
-    newpts1 = sortedpts2(negidx(end,1)+1:end,:);
+    newpts = sortedpts2(negidx(end,1)+1:end,:);
     end
 
 if figurecheck == true
-    plot3(newpts1(:,1),newpts1(:,2),newpts1(:,3),'.r')
+    plot3(newpts(:,1),newpts(:,2),newpts(:,3),'.r')
     hold on
 end
 
 %calculating the centroid
-x = newpts1(:,1);
-y = newpts1(:,2);
-z = newpts1(:,3);
+x = newpts(:,1);
+y = newpts(:,2);
+z = newpts(:,3);
 
 xcm = sum(x)./length(x);
 ycm = sum(y)./length(y);
@@ -341,19 +355,19 @@ zcm = sum(z)./length(z);
 r0 = [xcm ycm zcm];
 
 %Finding closest point to centroid...
-order = abs(newpts1(:,1:2)-r0(1:2));
+order = abs(newpts(:,1:2)-r0(1:2));
 [~,minidx] = min(order(:,1) + order(:,2));
-r0 = newpts1(minidx,:);
+r0 = newpts(minidx,:);
 % plot3(r0(1),r0(2),r0(3),'.','MarkerSize',50)
 % hold on
 
 %Writing the equation for tangent plane...
 %Finding the point in the same x-axis (relatively)
 ptsX = [];
-for i = 1:length(newpts1)
-    difX= newpts1(i,split2) - r0(split2);
+for i = 1:length(newpts)
+    difX= newpts(i,split2) - r0(split2);
     if abs(difX) < 65
-        term = newpts1(i,:);
+        term = newpts(i,:);
         ptsX = [ptsX; term];
     end
 end
@@ -364,10 +378,10 @@ WidV = ptsX(maxY,:) - ptsX(minY,:);
 
 %Finding the point in the same y-axis (relatively)
 ptsY = [];
-for i = 1:length(newpts1)
-    difY= newpts1(i,1) - r0(split3);
+for i = 1:length(newpts)
+    difY= newpts(i,1) - r0(split3);
     if abs(difY) < 65
-        term = newpts1(i,:);
+        term = newpts(i,:);
         ptsY = [ptsY; term];
     end
 end
@@ -377,17 +391,17 @@ Normvec = cross(DepV,WidV);
 Normvec = Normvec./norm(Normvec);
 
 %Limit x and y to only the max width/length
-limxy = abs([max(newpts1(:,1)), max(newpts1(:,2)), min(newpts1(:,1)), min(newpts1(:,2))]);
+limxy = abs([max(newpts(:,1)), max(newpts(:,2)), min(newpts(:,1)), min(newpts(:,2))]);
 limxy = max(limxy);
 
 [X,Y] = meshgrid(-limxy:2:limxy);
 %move r0 so that the z is now zmin...
 if restrictface == 1 || restrictface == 2
-    [~,minZ] = min(newpts1(:,split1));
-    r0 = newpts1(minZ,:); %readjust to include the minimal point in plane
+    [~,minZ] = min(newpts(:,split1));
+    r0 = newpts(minZ,:); %readjust to include the minimal point in plane
 else
-    [~,maxZ] = max(newpts1(:,split1));
-    r0 = newpts1(maxZ,:);
+    [~,maxZ] = max(newpts(:,split1));
+    r0 = newpts(maxZ,:);
 end
 D = -1*(Normvec(1)*r0(1) + Normvec(2)*r0(2) + Normvec(3)*r0(3));
 Z = -1/Normvec(3)*(Normvec(1)*X + Normvec(2)*Y + D);

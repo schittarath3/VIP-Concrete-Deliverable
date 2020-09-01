@@ -49,7 +49,7 @@ function sphereCell = VoidSearch(aggRepo, oriCubeSize, cubeSize, targetRate, sph
                continue
         end
          
-        %Checking if the cube is already in another cube
+        %Checking if the sphere is already in another sphere
         if ~inSphere(sphereCell, sphere)
             continue
         end
@@ -97,7 +97,6 @@ end
 end
 
 function [sphereVolume,sphereCell] = saveToSphereCell(sphere, sphereCell, xyz, sphereNum, grow, scaleStepFactor, growIter)
-        
     if grow
             if growIter == 1
                 scaleStepFactor = 1;
@@ -145,6 +144,8 @@ function checksOut = inCheck(cubeAlpha, sphereCell, aggRepo, sphere)
     end
     for agg = 1:aggNameLength
         curAggShape = alphaShape(aggRepo.(aggNames{agg}).Points);
+        crit = criticalAlpha(curAggShape, 'one-region') + 10;
+        curAggShape = alphaShape(aggRepo.(aggNames{agg}).Points, crit);
         if  sum(inShape(curAggShape, sphere)) > 0
             checksOut = false;
             return
@@ -160,7 +161,8 @@ function checksOut = isPointIn(xyz, aggRepo)
         
         for agg = 1:aggNameLength
             curAggShape = alphaShape(aggRepo.(aggNames{agg}).Points);
-            c = inShape(curAggShape, xyz(1), xyz(2), xyz(3));
+            crit = criticalAlpha(curAggShape, 'one-region') + 10;
+            curAggShape = alphaShape(aggRepo.(aggNames{agg}).Points, crit);
             if inShape(curAggShape, xyz(1), xyz(2), xyz(3))
                 checksOut = false;
                 return
@@ -179,16 +181,19 @@ end
 
 function checksOut = inSphere(sphereCell, sphere)
 %Checks if sphere is within another sphere
-        checksOut = true;
-        if ~isempty(sphereCell)
-            numSph = size(sphereCell);
-            for sph = 1:numSph(1)
-                spAlpha = alphaShape(sphereCell{sph});
-                if sum(inShape(spAlpha, sphere)) > 0
-                    checksOut = false;
-                    return
-                end
+    checksOut = true;
+    if ~isempty(sphereCell)
+        sphC = getClosestSpheres(getCentroid(sphere), sphereCell);
+        numSph = size(sphC);
+        for sph = 1:numSph(1)
+            spAlpha = alphaShape(sphC{sph});
+            crit = criticalAlpha(spAlpha, 'one-region') + 10;
+            spAlpha = alphaShape(sphC{sph}, crit);
+            if sum(inShape(spAlpha, sphere)) > 0
+                checksOut = false;
+                return
             end
+        end
     end
 end
 
@@ -210,6 +215,33 @@ function newSphereCell = sortSphereCell(sphereCell)
             end
         end
     end
+end
+
+function closestSpheres = getClosestSpheres(xyz, sphereCell)
+    sphereNum = size(sphereCell);
+    sphereNum = sphereNum(1);
+    for i = sphereNum
+        sphereCell(i,4) = mat2cell(sphereCell{i,2} - xyz, [1]);
+    end
+    sphereCell(:,4) = num2cell(cellfun(@norm, sphereCell(:,4)));
+    sphereCell = sortrows(sphereCell, 4);
+    
+    if sphereNum < 10
+         closestSpheres = sphereCell(1:sphereNum);
+    else
+        closestSpheres = sphereCell(2:10, 1);
+    end
+end
+
+function centroid = getCentroid(datapoints)
+    x = datapoints(:,1);
+    y = datapoints(:,2);
+    z = datapoints(:,3);
+
+    xcm = sum(x)./length(x);
+    ycm = sum(y)./length(y);
+    zcm = sum(z)./length(z);
+    centroid = [xcm ycm zcm];
 end
 
 function dist = maxDiam(aggpts)

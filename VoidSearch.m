@@ -1,4 +1,4 @@
-function sphereCell = VoidSearch(aggRepo, oriCubeSize, cubeSize, targetRate, spherePoints)
+function sphereCell = VoidSearch(aggRepo, oriCubeSize, cubeSize, targetRate, grownSpheres)
 %Attempts to find empty space in a given cube with or without aggregates. Randomly finds points that are within a sub-cube of the original cube and grows spheres at the empty point
 %Inputs:
 %   aggRepo: a struct of form of at least (aggName -> Points), can be empty
@@ -20,7 +20,7 @@ function sphereCell = VoidSearch(aggRepo, oriCubeSize, cubeSize, targetRate, sph
     cubeAlpha = alphaShape(cubePoints);
     
     %Growth rate
-    scaleStepFactor = 0.8;
+    scaleStepFactor = 0.25;
     
     %Getting the coverage rate needed as an end condition
     [covRate, totalVolume] = coverageRate(aggRepo, cubeSize^3);
@@ -37,12 +37,12 @@ function sphereCell = VoidSearch(aggRepo, oriCubeSize, cubeSize, targetRate, sph
         xyz = getNewPos(oriCubeSize, cs);
         
         %Checking if point is within an aggregate
-        if ~isPointIn(xyz, aggRepo)
+        if ~isPointIn(xyz, aggRepo, sphereCell)
             continue
         end
       
         %Create a sphere at the point
-        sphere = normalizeTo(spherePoints, xyz);
+        sphere = normalizeTo(cell2mat(grownSpheres{1}), xyz);
         
         %Checking is sphere is out of bounds of the sub-cube
         if sum(inShape(cubeAlpha, sphere)) < length(sphere)
@@ -54,10 +54,15 @@ function sphereCell = VoidSearch(aggRepo, oriCubeSize, cubeSize, targetRate, sph
             continue
         end
 
-        growIter = 1;
+        growIter = 2;
         while 1
+            if growIter == 6
+                sphereNum = sphereNum + 1;
+                [sphereVolume, sphereCell] = saveToSphereCell(newSphere, sphereCell, xyz, sphereNum, scaleStepFactor, growIter);
+                break;
+            end
             %Grow sphere
-            newSphere = growSphere(sphere, scaleStepFactor, xyz, growIter);
+            newSphere = normalizeTo(cell2mat(grownSpheres{growIter}), xyz);
             %Performs a check if the sphere is within any sphere,
             %aggregate, or not within the sub-cube
             isInSomething = inCheck(cubeAlpha, sphereCell, aggRepo, newSphere);
@@ -66,11 +71,7 @@ function sphereCell = VoidSearch(aggRepo, oriCubeSize, cubeSize, targetRate, sph
             if ~isInSomething
                 sphereNum = sphereNum + 1;
                 %Saves to the output cell
-                if growIter > 1
-                    [sphereVolume, sphereCell] = saveToSphereCell(sphere, sphereCell, xyz, sphereNum, true, scaleStepFactor, growIter);
-                else
-                    [sphereVolume, sphereCell] = saveToSphereCell(sphere, sphereCell, xyz, sphereNum, false, scaleStepFactor, growIter);
-                end
+                [sphereVolume, sphereCell] = saveToSphereCell(cell2mat(grownSpheres{growIter-1}), sphereCell, xyz, sphereNum, scaleStepFactor, growIter);
                 curSphereRate = curSphereRate + (sphereVolume/cubeSize^3)
                 break
             end
@@ -100,17 +101,15 @@ for vertice = 1:length(datapoints)
 end
 end
 
-function [sphereVolume,sphereCell] = saveToSphereCell(sphere, sphereCell, xyz, sphereNum, grow, scaleStepFactor, growIter)
-    if grow
-        if growIter >= 1
-            scaleStepFactor = scaleStepFactor * growIter;
-        end
-        scaleUp = [scaleStepFactor 0 0; 0 scaleStepFactor 0; 0 0 scaleStepFactor];
-        sphere = normalizeTo(sphere, [0 0 0]);
-        sphere = sphere * scaleUp;
-        sphere = normalizeTo(sphere, xyz);
-    end
+function [sphereVolume,sphereCell] = saveToSphereCell(sphere, sphereCell, xyz, sphereNum, scaleStepFactor, growIter)
+%     if growIter > 2
+%         scaleStepFactor = 1 + scaleStepFactor * (growIter - 1);
+%         sphere = normalizeTo(sphere, [0 0 0]);
+%         sphere = Scale(sphere, scaleStepFactor, scaleStepFactor, scaleStepFactor);
+%         sphere = normalizeTo(sphere, xyz);
+%     end
 
+    sphere = normalizeTo(sphere, xyz);
     sphereLength = maxDiam(sphere);
     sphereVolume = (4/3)*pi*((sphereLength/2)^3);
 
@@ -121,12 +120,12 @@ end
 
 function xyz = getNewPos(oriCubeSize, cs)
 %Generates a random point within the sub-cube
-        maxXYZ = oriCubeSize/2 + round(cs*0.90);
-        minXYZ = oriCubeSize/2 - round(cs*0.90);
-        xPos = round((maxXYZ -  minXYZ).*rand +  minXYZ);
-        yPos = round((maxXYZ -  minXYZ).*rand +  minXYZ);
-        zPos = round((maxXYZ -  minXYZ).*rand +  minXYZ);
-        xyz = [xPos yPos zPos];
+    maxXYZ = oriCubeSize/2 + round(cs*0.90);
+    minXYZ = oriCubeSize/2 - round(cs*0.90);
+    xPos = round((maxXYZ -  minXYZ).*rand +  minXYZ);
+    yPos = round((maxXYZ -  minXYZ).*rand +  minXYZ);
+    zPos = round((maxXYZ -  minXYZ).*rand +  minXYZ);
+    xyz = [xPos yPos zPos];
 end
 
 function checksOut = inCheck(cubeAlpha, sphereCell, aggRepo, sphere)
@@ -137,10 +136,12 @@ function checksOut = inCheck(cubeAlpha, sphereCell, aggRepo, sphere)
     checksOut = true;
     
     if sum(inShape(cubeAlpha, sphere)) < length(sphere)
+        disp("outside cube")
        checksOut = false;
        return
     end
     if ~inSphere(sphereCell, sphere)
+        disp("inside sphere")
         checksOut = false;
         return
     end
@@ -149,35 +150,36 @@ function checksOut = inCheck(cubeAlpha, sphereCell, aggRepo, sphere)
         crit = criticalAlpha(curAggShape, 'one-region') + 10;
         curAggShape = alphaShape(aggRepo.(aggNames{agg}).Points, crit);
         if  sum(inShape(curAggShape, sphere)) > 0
+            disp("inside aggregate")
             checksOut = false;
             return
         end
     end
 end
 
-function checksOut = isPointIn(xyz, aggRepo)
+function checksOut = isPointIn(xyz, aggRepo, sphereCell)
 %Checks if point is within a aggregate
-        aggNames = fieldnames(aggRepo);
-        aggNameLength = length(aggNames);
-        checksOut = true;
-        
-        for agg = 1:aggNameLength
-            curAggShape = alphaShape(aggRepo.(aggNames{agg}).Points);
-            crit = criticalAlpha(curAggShape, 'one-region') + 10;
-            curAggShape = alphaShape(aggRepo.(aggNames{agg}).Points, crit);
-            if inShape(curAggShape, xyz(1), xyz(2), xyz(3))
-                checksOut = false;
-                return
-            end
+    aggNames = fieldnames(aggRepo);
+    aggNameLength = length(aggNames);
+    checksOut = true;
+
+    for agg = 1:aggNameLength
+        curAggShape = alphaShape(aggRepo.(aggNames{agg}).Points);
+        crit = criticalAlpha(curAggShape, 'one-region') + 10;
+        curAggShape = alphaShape(aggRepo.(aggNames{agg}).Points, crit);
+        if inShape(curAggShape, xyz(1), xyz(2), xyz(3))
+            disp("overlap found")
+            checksOut = false;
+            return
         end
+    end
 end
 
 function c = growSphere(sphere, scaleStepFactor, xyz, growIter)
 %Grows sphere by the specified scale factor
-    scaleStepFactor = scaleStepFactor * growIter;
-    scaleUp = [scaleStepFactor 0 0; 0 scaleStepFactor 0; 0 0 scaleStepFactor];
+    scaleStepFactor = 1 + (scaleStepFactor * growIter);
     a = normalizeTo(sphere, [0 0 0]);
-    b = a * scaleUp;
+    b = Scale(a, scaleStepFactor, scaleStepFactor, scaleStepFactor);
     c = normalizeTo(b, xyz);
 end
 
@@ -189,9 +191,10 @@ function checksOut = inSphere(sphereCell, sphere)
         numSph = size(sphC);
         for sph = 1:numSph(1)
             spAlpha = alphaShape(sphC{sph});
-            crit = criticalAlpha(spAlpha, 'one-region') + 10;
-            spAlpha = alphaShape(sphC{sph}, crit);
-            if sum(inShape(spAlpha, sphere)) > 0
+            if sum(inShape(spAlpha, sphere)) ~= 0
+                checksOut = false;
+                break
+            elseif sum(inShape(alphaShape(sphere), sphC{sph})) ~= 0
                 checksOut = false;
                 break
             end
@@ -222,16 +225,17 @@ end
 function closestSpheres = getClosestSpheres(xyz, sphereCell)
     sphereNum = size(sphereCell);
     sphereNum = sphereNum(1);
+    tempCell = sphereCell;
     for i = sphereNum
-        sphereCell(i,4) = mat2cell(sphereCell{i,2} - xyz, [1]);
+        tempCell(i,4) = mat2cell(tempCell{i,2} - xyz, [1]);
     end
-    sphereCell(:,4) = num2cell(cellfun(@norm, sphereCell(:,4)));
-    sphereCell = sortrows(sphereCell, 4);
+    tempCell(:,4) = num2cell(cellfun(@norm, tempCell(:,4)));
+    tempCell = sortrows(tempCell, 4);
     
-    if sphereNum < 10
-         closestSpheres = sphereCell(1:sphereNum);
+    if sphereNum < 40
+         closestSpheres = tempCell(1:sphereNum, 1);
     else
-        closestSpheres = sphereCell(2:10, 1);
+        closestSpheres = tempCell(2:40, 1);
     end
 end
 
@@ -256,4 +260,11 @@ for i = 1:length(aggpts)
     end
     end
 end
+end
+
+function nv = Scale(pts,sx,sy,sz) 
+%Rotational matrix
+scalem = diag([sx sy sz]);
+
+nv = pts * scalem;
 end

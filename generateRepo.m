@@ -80,7 +80,7 @@ function [new_cnt, new_pts] = Volume(pts,cnt,mesh_volume,filename,plot)
 %Calculating percentage based on the number of faces...
 set(0,'DefaultFigureVisible','off') %turn off any figures
 mesh = trimesh(cnt,pts(:,1),pts(:,2),pts(:,3));
-tol = 500;
+tol = 250;
 numFaces = length(mesh.Faces(:,1));
 redper = tol/numFaces; 
 [new_cnt, new_pts] = reducepatch(mesh,redper);

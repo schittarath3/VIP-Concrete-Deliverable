@@ -94,6 +94,7 @@ volfract = 1; %Ideal volume fraction, this is the finite number that will stop
 %the aggregate from further reducing. If the mesh is too reduced, it will
 %be inside of the original and be too small.
 while aggVf > volfract
+    iter = 0;
     nvnew = new_pts*(1.0+stepsz); %Gradually increasing representative shape
     aggVolnew = abs(stlVolume(nvnew',new_cnt'));
     aggVfnew = mesh_volume./aggVolnew;
@@ -101,9 +102,10 @@ while aggVf > volfract
     if aggVfnew < volfract
         break
     else
+        iter = iter +1;
         new_pts = nvnew;
         aggVf = aggVfnew;
-        stepsz = stepsz*.87;
+        stepsz = stepsz.*(1/iter);
     end
 end
 

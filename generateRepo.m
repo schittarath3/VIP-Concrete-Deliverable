@@ -80,7 +80,7 @@ function [new_cnt, new_pts] = Volume(pts,cnt,mesh_volume,filename,plot)
 %Calculating percentage based on the number of faces...
 set(0,'DefaultFigureVisible','off') %turn off any figures
 mesh = trimesh(cnt,pts(:,1),pts(:,2),pts(:,3));
-tol = 250;
+tol = 400;
 numFaces = length(mesh.Faces(:,1));
 redper = tol/numFaces; 
 [new_cnt, new_pts] = reducepatch(mesh,redper);
@@ -90,7 +90,7 @@ stepsz = .02;
 aggVol = abs(stlVolume(new_pts',new_cnt'));
 aggVf = mesh_volume./aggVol;
 
-volfract = 1; %Ideal volume fraction, this is the finite number that will stop
+volfract = .98; %Ideal volume fraction, this is the finite number that will stop
 %the aggregate from further reducing. If the mesh is too reduced, it will
 %be inside of the original and be too small.
 while aggVf > volfract

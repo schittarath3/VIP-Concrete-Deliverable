@@ -14,16 +14,23 @@ load('grainsizeresults.mat');
 aggRepo = generateDistributedRepo(repos, 1000, results, sieveSz);
 [insertRepo, aggRepo] = insertAgg(aggRepo, testCubes, 27);  %Inserting aggregates into cubes and generating a new repo
 
-finalRepo = tangentPlane(insertRepo);
-% [finalRate, totalVolume] = coverageRate(finalRepo, 218^3);
-% % finalRepo = shrinkByOrigin(finalRepo, .10769);
-% 
-% repoToSTL(finalRepo);       
-% %Converting points into Repo into STL then plotting STL
-% delete('STL Files\Aggregates Out\*.stl')
-% plotSTL('STL Files\Aggregates Out');
-toc
+firstPackRepo = tangentPlane(insertRepo); %using tangent planes to pack larger aggregates
 
+spherePoints = stlread('sphere.stl').Points;
+sphereCell = VoidSearch(firstPackRepo, 654, 300,  0.70, spherePoints); %finding empty spaces
+[sphAggRepo, a] = Sphere2Agg(aggRepo, sphereCell, results, sieveSz, 999); % associating aggregates with spheres
+
+mergedRepo = mergeRepos(sphAggRepo, firstPackRepo);
+
+finalRepo = removeOverlaps(mergedRepo);
+
+try
+    mkdir 'STL Files' 'Aggregates Out'
+end
+
+repoToSTL(finalRepo, 2) %Create stl files in '.../STL Files/Aggregates Out'
+disp('done')
+toc
 %% Functions
 function mergedRepo = mergeRepos(repoA,repoB)
 %Merges two aggRepos
@@ -53,3 +60,5 @@ for vertice = 1:length(datapoints)
     datapointsn(vertice,:) = [datapoints(vertice,:) - dcm];
 end
 end
+
+

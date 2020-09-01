@@ -42,9 +42,9 @@ for ag = 1:numSamples
     for ty = 1:length(angles)
         for tx = 1:length(angles)
             for tz = 1:length(angles)
-                new_pts = Rotate(new_pts,angles(tx),angles(ty),angles(tz));
+                rotate_pts = Rotate(new_pts,angles(tx),angles(ty),angles(tz));
                 orientation = strcat('tx_indx',num2str(tx),'ty_indx',num2str(ty),'tz_indx',num2str(tz));
-                repos.(filename(1:end-4)).Orientation.(orientation) = new_pts;
+                repos.(filename(1:end-4)).Orientation.(orientation) = rotate_pts;
 
                 %Finding the maximum lengths
                 repos.(filename(1:end-4)).xLength = max(new_pts(:,1)) - min(new_pts(:,1));

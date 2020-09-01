@@ -28,8 +28,7 @@ ang = linspace(-pi/8,pi/8,5);
 %translating towards it (this is defined as the 14th position in the cube
 %cells).
 figure(1)
-rotOrient = repos.(fields{14}).Orientation;
-pts14 = Rotate(repos.(fields{14}).OriginalPoints,ang(rotOrient(1)),ang(rotOrient(2)),ang(rotOrient(3)));
+pts14 = repos.(fields{14}).OriginalPoints;
 cnt14 = repos.(fields{14}).OriginalFaces;
 [~,cm(14,1:3)] = normalize(repos.(fields{14}).Points);
 pts14 = pts14 + cm(14); 
@@ -53,8 +52,7 @@ sequence = [5,17,13,11,15,23,6,12,18,24,4,10,16,22,1,2,3,7,8,9,19,20,21,25,26,27
 for idx = 1:length(sequence)
     %Rotating the aggregates according the correct orientation 
     aggNum = sequence(idx);
-    rotaOrient = repos.(fields{aggNum}).Orientation;
-    pts = Rotate(repos.(fields{aggNum}).OriginalPoints,ang(rotaOrient(1)),ang(rotaOrient(2)),ang(rotaOrient(3)));
+    pts = repos.(fields{aggNum}).OriginalPoints;
     
     %Translate the added aggregates towards the center aggregate,
     %making sure that the respective tangent planes are aligned at
@@ -87,6 +85,8 @@ for idx = 1:length(sequence)
         aggRepo.(fields{aggNum}).bin= repos.(fields{aggNum}).bin;
         aggRepo.(fields{aggNum}).cubeNum= repos.(fields{aggNum}).cubeNum;
 
+        trimesh(cnt,newpts(:,1),newpts(:,2),newpts(:,3),'EdgeColor','red');
+        hold on
         trimesh(repos.(fields{aggNum}).Faces,reduce_pts(:,1),reduce_pts(:,2),reduce_pts(:,3),'EdgeColor','blue');
         hold on
         xlabel('x'); ylabel('y'); zlabel('z');

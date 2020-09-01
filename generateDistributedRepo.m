@@ -59,6 +59,7 @@ function aggRepo = generateDistributedRepo(repos, totalAggNum, distribResults, d
                                  0 aggSizes(randi(100, 1))/curAggDiameter 0; ...
                                  0 0 aggSizes(randi(100, 1))/curAggDiameter];
             curAgg = curAgg * scaleMat;
+            curAggOriginal = normalizeTo(curAggOriginal, [0 0 0]);
             curAggOriginal = curAggOriginal * scaleMat;
             newAggDiameter = maxDiam(curAgg);
             

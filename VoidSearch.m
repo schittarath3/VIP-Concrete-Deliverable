@@ -66,7 +66,11 @@ function sphereCell = VoidSearch(aggRepo, oriCubeSize, cubeSize, targetRate, sph
             if ~isInSomething
                 sphereNum = sphereNum + 1;
                 %Saves to the output cell
-                [sphereVolume, sphereCell] = saveToSphereCell(sphere, sphereCell, xyz, sphereNum, true, scaleStepFactor, growIter);
+                if growIter > 1
+                    [sphereVolume, sphereCell] = saveToSphereCell(sphere, sphereCell, xyz, sphereNum, true, scaleStepFactor, growIter);
+                else
+                    [sphereVolume, sphereCell] = saveToSphereCell(sphere, sphereCell, xyz, sphereNum, false, scaleStepFactor, growIter);
+                end
                 curSphereRate = curSphereRate + (sphereVolume/cubeSize^3)
                 break
             end
@@ -98,23 +102,21 @@ end
 
 function [sphereVolume,sphereCell] = saveToSphereCell(sphere, sphereCell, xyz, sphereNum, grow, scaleStepFactor, growIter)
     if grow
-            if growIter == 1
-                scaleStepFactor = 1;
-            else
-                scaleStepFactor = scaleStepFactor * (growIter - 1);
-            end
-            scaleUp = [scaleStepFactor 0 0; 0 scaleStepFactor 0; 0 0 scaleStepFactor];
-            sphere = normalizeTo(sphere, [0 0 0]);
-            sphere = sphere * scaleUp;
-            sphere = normalizeTo(sphere, xyz);
+        if growIter >= 1
+            scaleStepFactor = scaleStepFactor * growIter;
         end
+        scaleUp = [scaleStepFactor 0 0; 0 scaleStepFactor 0; 0 0 scaleStepFactor];
+        sphere = normalizeTo(sphere, [0 0 0]);
+        sphere = sphere * scaleUp;
+        sphere = normalizeTo(sphere, xyz);
+    end
 
-        sphereLength = maxDiam(sphere);
-        sphereVolume = (4/3)*pi*((sphereLength/2)^3);
-        
-        sphereCell{sphereNum, 1} = sphere;
-        sphereCell{sphereNum, 2} = xyz;
-        sphereCell{sphereNum, 3} = sphereLength;
+    sphereLength = maxDiam(sphere);
+    sphereVolume = (4/3)*pi*((sphereLength/2)^3);
+
+    sphereCell{sphereNum, 1} = sphere;
+    sphereCell{sphereNum, 2} = xyz;
+    sphereCell{sphereNum, 3} = sphereLength;
 end
 
 function xyz = getNewPos(oriCubeSize, cs)
@@ -191,7 +193,7 @@ function checksOut = inSphere(sphereCell, sphere)
             spAlpha = alphaShape(sphC{sph}, crit);
             if sum(inShape(spAlpha, sphere)) > 0
                 checksOut = false;
-                return
+                break
             end
         end
     end

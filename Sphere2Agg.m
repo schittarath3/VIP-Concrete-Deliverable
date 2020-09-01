@@ -2,13 +2,19 @@ function [newaggRepo, agg_dist, sphereCell]= Sphere2Agg(aggRepo,sphereCell,resul
 %Pack the rest of the aggregates to the original 27 following the grain
 %size distribution obtained from the 2D image analysis:
 %Inputs:
-%   aggRepo - the generated distributed repository containing the scaled
-%   aggregates to fit inside the container.
-%   sphereCell - the generated repository containing possible empty spaces
-%   to fit the aggregates inside of the original packed 27 aggregates.
-%   results - a mx1 cell containg the lengths (bins) of the grains 
-%   sieveSz - a 1xn cell containing the results of the grain size
-%   totalAggs - total number of aggregates contained
+    %   aggRepo - the generated distributed repository containing the scaled
+    %   aggregates to fit inside the container.
+    %   sphereCell - the generated repository containing possible empty spaces
+    %   to fit the aggregates inside of the original packed 27 aggregates.
+    %   results - a mx1 cell containg the lengths (bins) of the grains 
+    %   sieveSz - a 1xn cell containing the results of the grain size
+    %   totalAggs - total number of aggregates contained
+%Outputs:
+    %   newaggRepo - new repository of the aggregates containing the added
+    %   scaled aggregates inside sphere cells
+    %   agg_dist - distribution matrix containing the number of aggregates
+    %   from each bin/sieve size packed
+    %   sphereCell - updated sphere cell with the remaining sphere cells 
 
 %Determine how many aggregates can be packed to get the desired
 %distribution based on total number of aggs (user-determined):
@@ -73,6 +79,14 @@ end
 end
 
 function datapointsn = translate2Center(datapoints,center)
+%Translate the aggregates to the origin (0,0,0)
+%Inputs: 
+    %datapoints - coordinates of the aggregates with each column
+    %representing x,y,z
+    %center - the point to translate the CoM of the aggregates towards
+%Outputs:   
+    %datapointsn - translated coordinates
+    
 %Obtain the center of each aggregate
 x = datapoints(:,1);
 y = datapoints(:,2);

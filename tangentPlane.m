@@ -366,7 +366,7 @@ r0 = newpts(minidx,:);
 ptsX = [];
 for i = 1:length(newpts)
     difX= newpts(i,split2) - r0(split2);
-    if abs(difX) < 65
+    if abs(difX) < 25
         term = newpts(i,:);
         ptsX = [ptsX; term];
     end
@@ -379,8 +379,8 @@ WidV = ptsX(maxY,:) - ptsX(minY,:);
 %Finding the point in the same y-axis (relatively)
 ptsY = [];
 for i = 1:length(newpts)
-    difY= newpts(i,1) - r0(split3);
-    if abs(difY) < 65
+    difY= newpts(i,split3) - r0(split3);
+    if abs(difY) < 25
         term = newpts(i,:);
         ptsY = [ptsY; term];
     end

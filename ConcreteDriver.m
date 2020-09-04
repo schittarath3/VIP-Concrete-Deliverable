@@ -16,8 +16,8 @@ aggRepo = generateDistributedRepo(repos, 1000, results, sieveSz);
 
 firstPackRepo = tangentPlane(insertRepo); %using tangent planes to pack larger aggregates
 
-spherePoints = stlread('sphere.stl').Points;
-sphereCell = VoidSearch(firstPackRepo, 654, 300,  0.70, spherePoints); %finding empty spaces
+load('grownSpheres.mat');
+sphereCell = VoidSearch(firstPackRepo, 654, 400,  0.60, grownSpheres); %finding empty spaces
 [sphAggRepo, a] = Sphere2Agg(aggRepo, sphereCell, results, sieveSz, 999); % associating aggregates with spheres
 
 mergedRepo = mergeRepos(sphAggRepo, firstPackRepo);

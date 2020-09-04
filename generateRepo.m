@@ -39,8 +39,8 @@ for ag = 1:numSamples
 
     %Rotating each of the aggregates for a set orientation...
     angles = linspace(-pi/8,pi/8,5);
-    for ty = 1:length(angles)
-        for tx = 1:length(angles)
+    for tx = 1:length(angles)
+        for ty = 1:length(angles)
             for tz = 1:length(angles)
                 rotate_pts = Rotate(new_pts,angles(tx),angles(ty),angles(tz));
                 orientation = strcat('tx_indx',num2str(tx),'ty_indx',num2str(ty),'tz_indx',num2str(tz));
@@ -80,7 +80,7 @@ function [new_cnt, new_pts] = Volume(pts,cnt,mesh_volume,filename,plot)
 %Calculating percentage based on the number of faces...
 set(0,'DefaultFigureVisible','off') %turn off any figures
 mesh = trimesh(cnt,pts(:,1),pts(:,2),pts(:,3));
-tol = 400;
+tol = 500;
 numFaces = length(mesh.Faces(:,1));
 redper = tol/numFaces; 
 [new_cnt, new_pts] = reducepatch(mesh,redper);

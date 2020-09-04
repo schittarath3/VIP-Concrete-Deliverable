@@ -30,9 +30,14 @@ function sphereCell = VoidSearch(aggRepo, oriCubeSize, cubeSize, targetRate, gro
     sphereCell = cell(0,0);
     sphereNum = 0;
     curSphereRate = 0;
-    
+    tryNum = 0;
     %Looping until the sphere coverage rate is achieved
     while curSphereRate < sphereCovRate
+        if tryNum > 600
+            disp("volume fraction cannot be reached")
+            break
+        end
+        tryNum = tryNum + 1;
         %Generates a new point
         xyz = getNewPos(oriCubeSize, cs);
         
@@ -56,6 +61,7 @@ function sphereCell = VoidSearch(aggRepo, oriCubeSize, cubeSize, targetRate, gro
 
         growIter = 2;
         while 1
+            tryNum = 0;
             if growIter == 6
                 sphereNum = sphereNum + 1;
                 [sphereVolume, sphereCell] = saveToSphereCell(newSphere, sphereCell, xyz, sphereNum, scaleStepFactor, growIter);
@@ -65,7 +71,7 @@ function sphereCell = VoidSearch(aggRepo, oriCubeSize, cubeSize, targetRate, gro
             newSphere = normalizeTo(cell2mat(grownSpheres{growIter}), xyz);
             %Performs a check if the sphere is within any sphere,
             %aggregate, or not within the sub-cube
-            isInSomething = inCheck(cubeAlpha, sphereCell, aggRepo, newSphere);
+            isInSomething = inCheck(cubeAlpha, sphereCell, aggRepo, newSphere, xyz);
             
             %Stops growing if the previous condition is true
             if ~isInSomething
@@ -128,29 +134,25 @@ function xyz = getNewPos(oriCubeSize, cs)
     xyz = [xPos yPos zPos];
 end
 
-function checksOut = inCheck(cubeAlpha, sphereCell, aggRepo, sphere)
+function checksOut = inCheck(cubeAlpha, sphereCell, aggRepo, sphere, xyz)
 %Checks if a sphere is within an aggregate or another sphere, and not
 %within the sub-cube
-    aggNames = fieldnames(aggRepo);
+    aggNames = getClosestAggregates(xyz, aggRepo);
     aggNameLength = length(aggNames);
     checksOut = true;
     
     if sum(inShape(cubeAlpha, sphere)) < length(sphere)
-        disp("outside cube")
        checksOut = false;
        return
     end
     if ~inSphere(sphereCell, sphere)
-        disp("inside sphere")
         checksOut = false;
         return
     end
     for agg = 1:aggNameLength
-        curAggShape = alphaShape(aggRepo.(aggNames{agg}).Points);
-        crit = criticalAlpha(curAggShape, 'one-region') + 10;
+         crit = criticalAlpha(alphaShape(aggRepo.(aggNames{agg}).Points), 'one-region') + 20;
         curAggShape = alphaShape(aggRepo.(aggNames{agg}).Points, crit);
         if  sum(inShape(curAggShape, sphere)) > 0
-            disp("inside aggregate")
             checksOut = false;
             return
         end
@@ -159,16 +161,13 @@ end
 
 function checksOut = isPointIn(xyz, aggRepo, sphereCell)
 %Checks if point is within a aggregate
-    aggNames = fieldnames(aggRepo);
+    aggNames = getClosestAggregates(xyz, aggRepo);
     aggNameLength = length(aggNames);
     checksOut = true;
 
     for agg = 1:aggNameLength
         curAggShape = alphaShape(aggRepo.(aggNames{agg}).Points);
-        crit = criticalAlpha(curAggShape, 'one-region') + 10;
-        curAggShape = alphaShape(aggRepo.(aggNames{agg}).Points, crit);
         if inShape(curAggShape, xyz(1), xyz(2), xyz(3))
-            disp("overlap found")
             checksOut = false;
             return
         end
@@ -190,7 +189,8 @@ function checksOut = inSphere(sphereCell, sphere)
         sphC = getClosestSpheres(getCentroid(sphere), sphereCell);
         numSph = size(sphC);
         for sph = 1:numSph(1)
-            spAlpha = alphaShape(sphC{sph});
+            crit = criticalAlpha(alphaShape(sphC{sph}), 'one-region') + 20;
+            spAlpha = alphaShape(sphC{sph}, crit);
             if sum(inShape(spAlpha, sphere)) ~= 0
                 checksOut = false;
                 break
@@ -226,18 +226,27 @@ function closestSpheres = getClosestSpheres(xyz, sphereCell)
     sphereNum = size(sphereCell);
     sphereNum = sphereNum(1);
     tempCell = sphereCell;
-    for i = sphereNum
+    for i = 1:sphereNum
         tempCell(i,4) = mat2cell(tempCell{i,2} - xyz, [1]);
     end
     tempCell(:,4) = num2cell(cellfun(@norm, tempCell(:,4)));
     tempCell = sortrows(tempCell, 4);
     
-    if sphereNum < 40
+    if sphereNum < 15
          closestSpheres = tempCell(1:sphereNum, 1);
     else
-        closestSpheres = tempCell(2:40, 1);
+        closestSpheres = tempCell(2:15, 1);
     end
 end
+
+function closestAggs = getClosestAggregates(xyz, aggRepo)
+    aggs = fieldnames(aggRepo);
+    for i = 1:length(aggs)
+        aggs(i,2) = mat2cell(norm(getCentroid(aggRepo.(aggs{i}).Points) - xyz), [1]);
+    end
+    aggs = sortrows(aggs, 2);
+    closestAggs = aggs(1:4);
+end 
 
 function centroid = getCentroid(datapoints)
     x = datapoints(:,1);

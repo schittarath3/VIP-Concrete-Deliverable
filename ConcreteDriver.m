@@ -10,19 +10,50 @@ cubeSize = 654;
 nDivisions = 3;
 testCubes = genCublets(cubeSize, nDivisions, startCoords, 1);              
 
-load('grainsizeresults2.mat');
-aggRepo = generateDistributedRepo(repos, 1000, results, sieveSz);
+load('grainsizeresults4.mat');
+aggRepo = generateDistributedRepo(repos, 3000, results, sieveSz);
 [insertRepo, aggRepo] = insertAgg(aggRepo, testCubes, 27);  %Inserting aggregates into cubes and generating a new repo
 
-firstPackRepo = tangentPlane(insertRepo); %using tangent planes to pack larger aggregates
+%using tangent planes to pack larger aggregates
+fn = fieldnames(aggRepo);
+packedRepo = struct;
+packRepo.(fn{1}) = aggRepo.(fn{1});
+load('grownSpheres2.mat');
 
-load('grownSpheres.mat');
-sphereCell = VoidSearch(firstPackRepo, 654, 400,  0.60, grownSpheres); %finding empty spaces
-[sphAggRepo, a] = Sphere2Agg(aggRepo, sphereCell, results, sieveSz, 999); % associating aggregates with spheres
-
-mergedRepo = mergeRepos(sphAggRepo, firstPackRepo);
-
+%%
+maxIter = 5;
+allRepos = cell(maxIter,1);
+parfor repo = 1:maxIter,3;
+    packRepo = tangentPlane(insertRepo); 
+    sphereCell = VoidSearch(packRepo, 654, 350,  0.20, grownSpheres); %finding empty spaces
+    sphAggRepo = Sphere2Agg(aggRepo, sphereCell, results, sieveSz, repo, 999); % associating aggregates with spheres
+    aRepo = mergeRepos(sphAggRepo, packRepo);
+    allRepos{repo} = aRepo;
+end
+   
+mergedRepo = struct;
+for repo = 1:maxIter
+    mergedRepo = mergeRepos(mergedRepo, allRepos{repo});
+end
 finalRepo = removeOverlaps(mergedRepo);
+finalRepo = translateToPoint(finalRepo, 5, [654/2 654/2 654/2]);
+
+%% 
+maxIter = 3;
+allRepos = cell(maxIter,1);
+parfor repo = 1:maxIter,3
+    sphereCell = VoidSearch(finalRepo, 654, 350,  0.20, grownSpheres); %finding empty spaces
+    sphAggRepo = Sphere2Agg(aggRepo, sphereCell, results, sieveSz, repo, 999); % associating aggregates with spheres
+    allRepos{repo} = sphAggRepo;
+end
+
+for repo = 1:maxIter
+    finalRepo = mergeRepos(finalRepo, allRepos{repo});
+end
+finalRepo = removeOverlaps(finalRepo);
+finalRepo = translateToPoint(finalRepo, 5, [654/2 654/2 654/2]);
+finalRepo = removeOverlaps(finalRepo);
+%% 
 
 try
     mkdir 'STL Files' 'Aggregates Out'

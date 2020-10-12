@@ -1,5 +1,4 @@
 function newRepo = translateToPoint(aggRepo, stepSize, point)
-tic
 %Translates all aggregates to defined point and checks for overlaps
 %Inputs:
 %   aggRepo: struct of aggregates with form of at least aggName->Points
@@ -12,6 +11,8 @@ tic
     %setting up constants 
     aggNames = fieldnames(aggRepo);
     numAggs = length(aggNames);
+    minRange = (point - 5);
+    maxRange = (point + 5);
     
     %find distance of aggregate centroids to defined point
     newRepo = aggRepo;
@@ -26,8 +27,6 @@ tic
     
     %sort array by ascending distance and get minimum and maximum
     distTable = sortrows(distTable, 2);
-    minDist = min([distTable{:,2}]);
-    maxDist = max([distTable{:,2}]);
     
     %normalize the closest aggregate to point which serve as the initial
     %overlap check
@@ -38,52 +37,60 @@ tic
         state = false;
         curAggName = distTable{i,1};
         curAggPoints = newRepo.(curAggName).Points;
-        
+        step = 1;
+        curCent = getCentroid(curAggPoints);
+        curDist = getDist(point, curCent);
+        if curDist < stepSize
+            curDist = 10;
+        end
+        normScale = distNorm(curDist, stepSize);
+
         %translate aggregate closer to point. scaleStep is normalized by
         %distance because greater distance are translated further than
         %closer aggregates
         while 1
-            curCent = getCentroid(curAggPoints);
-            curDist = getDist(point, curCent);
             %normalize travel distance
-            if curDist < minDist
-                curDist = minDist;
-            end
-            if curDist >= maxDist
-                curDist = maxDist - 1;
-            end
-            normScale = distNorm(maxDist, minDist, curDist);
-            newCent = curCent + ((point - curCent) * stepSize * normScale);
+            newCent = curCent + (point - curCent)*normScale*step;
             curAggPoints = normalizeTo(curAggPoints, newCent);
-            
-            %check with other aggregates using alphaShapes. should this be
-            %the parfor loop?
-            for j = 1:numAggs
-                if j == i
+            %check with other aggregates using alphaShapes. 
+            closestAggs = getClosestAggregates(curCent, newRepo)';
+            for j = 1:length(closestAggs)
+                curOtherAgg = closestAggs{j,1};
+                if strcmp(curAggName, curOtherAgg)
                     continue
                 end
-                curOtherAgg = distTable{j,1};
                 otherAggPoints = newRepo.(curOtherAgg).Points;
                 otherAlpha = alphaShape(otherAggPoints);
+                crit = criticalAlpha(otherAlpha, 'one-region') + 40;
+                otherAlpha = alphaShape(otherAggPoints, crit);
                 
                 pointCheck = inShape(otherAlpha, curAggPoints);
                 pointCheckSum = sum(pointCheck, 'all');
                 if pointCheckSum > 0 %breaks if there is overlap and scales back once
-                    curAggPoints = normalizeTo(curAggPoints, curCent);
-                    newRepo.(curAggName).Points = curAggPoints(:,1:3);
                     state = true;
                     break
                 end
             end
+            if sum(minRange < newCent) == 3 && sum(maxRange > newCent) == 3
+                state = true;
+            end
             if state == true
+                if step ~= 1
+                    newCent = curCent + (point - curCent)*normScale*(step - 1);
+                    curAggPoints = normalizeTo(curAggPoints, newCent);
+                    newRepo.(curAggName).Points = curAggPoints(:,1:3);
+                    curAggOriPoints = newRepo.(curAggName).OriginalPoints;
+                    curAggOriPoints = normalizeTo(curAggOriPoints, newCent);
+                    newRepo.(curAggName).OriginalPoints = curAggOriPoints(:,1:3);
+                end
                 break
             end
+            step = step + 1;
         end
     end
-    toc
 end
 
-function normScale = distNorm(max, min, curDistance)
+function normScale = distNorm(curDistance, stepSz)
 %normalize distance formula
 %Inputs: 
 %   max: maximum distance
@@ -91,8 +98,8 @@ function normScale = distNorm(max, min, curDistance)
 %   curDiostance: current distance of aggregate to point
 %Outputs:
 %   normScale: double [0,1]
-    normScale = (curDistance - min)/(max - min);
-    normScale= 1 - normScale;
+    curDistStep = curDistance/stepSz;
+    normScale = 1/round(curDistStep);
 end
 
 function distance = getDist(pointFinal, pointsAggCent)
@@ -136,3 +143,12 @@ for vertice = 1:length(datapoints)
     datapointsn(vertice,:) = [datapoints(vertice,:) - dcm];
 end
 end
+
+function closestAggs = getClosestAggregates(xyz, aggRepo)
+    aggs = fieldnames(aggRepo);
+    for i = 1:length(aggs)
+        aggs(i,2) = mat2cell(norm(getCentroid(aggRepo.(aggs{i}).Points) - xyz), [1]);
+    end
+    aggs = sortrows(aggs, 2);
+    closestAggs = aggs(1:30);
+end 

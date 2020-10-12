@@ -1,4 +1,4 @@
-function [newaggRepo, agg_dist, sphereCell]= Sphere2Agg(aggRepo,sphereCell,results,sieveSz,totalAggs)
+function [newaggRepo, agg_dist, aggRepo]= Sphere2Agg(aggRepo,sphereCell,results,sieveSz,iter,totalAggs)
 %Pack the rest of the aggregates to the original 27 following the grain
 %size distribution obtained from the 2D image analysis:
 %Inputs:
@@ -49,10 +49,23 @@ for agg = 1:length(fields_agg)
         end
 end
 
+if length(aggRepoSort) < maxBin
+    maxBin = length(aggRepoSort);
+end
+
+numRemove = 1;
+removedFields = {};
 for bins = 1:maxBin
-    
-    for aggs = 1:agg_dist(bins)
-        binSz_fields = fieldnames(aggRepoSort{bins,1});
+    if isempty(aggRepoSort{bins,1})
+        continue
+    end
+    binSz_fields = fieldnames(aggRepoSort{bins,1});
+    if length(binSz_fields) < agg_dist(bins)
+        numAgg = length(binSz_fields);
+    else
+        numAgg = agg_dist(bins);
+    end
+    for aggs = 1:numAgg
         agg_idx = aggRepoSort{bins,1}.(char(binSz_fields(aggs))).Index;
         agg_sph_bin = aggRepoSort{bins,1}.(char(binSz_fields(aggs))).Spherebin;
         
@@ -65,17 +78,31 @@ for bins = 1:maxBin
 
         %Removing the sphere cell used
         sphereCell{agg_sph_bin,1} = sphereCell{agg_sph_bin,1}(2:end,1:2);
-
+        newName = strcat(fields_agg{agg_idx}, "_", num2str(iter));
         %Rewriting the coordinates for the aggregates to substitute...
-         newaggRepo.(fields_agg{agg_idx}).Original = aggRepo.(fields_agg{agg_idx}).Original;
-         newaggRepo.(fields_agg{agg_idx}).OriginalPoints = translate2Center(pts, sph_cm);
-         newaggRepo.(fields_agg{agg_idx}).OriginalFaces = aggRepo.(fields_agg{agg_idx}).OriginalFaces;
-         newaggRepo.(fields_agg{agg_idx}).Points = translate2Center(aggRepo.(fields_agg{agg_idx}).Points, sph_cm);
-         newaggRepo.(fields_agg{agg_idx}).Faces = aggRepo.(fields_agg{agg_idx}).Faces;
-         newaggRepo.(fields_agg{agg_idx}).Diameter = aggRepo.(fields_agg{agg_idx}).Diameter;
-  end
-
+         newaggRepo.(newName).Original = aggRepo.(fields_agg{agg_idx}).Original;
+         newaggRepo.(newName).OriginalPoints = translate2Center(pts, sph_cm);
+         newaggRepo.(newName).OriginalFaces = aggRepo.(fields_agg{agg_idx}).OriginalFaces;
+         newaggRepo.(newName).Points = translate2Center(aggRepo.(fields_agg{agg_idx}).Points, sph_cm);
+         newaggRepo.(newName).Faces = aggRepo.(fields_agg{agg_idx}).Faces;
+         newaggRepo.(newName).Diameter = aggRepo.(fields_agg{agg_idx}).Diameter;
+         newaggRepo.(newName).Centroid = sph_cm;
+         removedFields{numRemove, 1} = fields_agg{agg_idx};
+         numRemove = numRemove + 1;
+    end
 end
+aggRepo = rmfield(aggRepo, removedFields);
+end
+
+function centroid = getCentroid(datapoints)
+    x = datapoints(:,1);
+    y = datapoints(:,2);
+    z = datapoints(:,3);
+
+    xcm = sum(x)./length(x);
+    ycm = sum(y)./length(y);
+    zcm = sum(z)./length(z);
+    centroid = [xcm ycm zcm];
 end
 
 function datapointsn = translate2Center(datapoints,center)

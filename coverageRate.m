@@ -5,19 +5,18 @@ function [covRate, tAV] = coverageRate(aggRepo, containerVolume)
 %   cubeLength: Length of cube
 %Outputs:
 %   Volume fraction of aggregates within cube as float value
-
     aggNames = fieldnames(aggRepo);
     numAgg = length(aggNames);
 
     totalAggVol = 0;
     covRate = 0;
     for i = 1:numAgg %calculate volume for each aggregate and totals
-        p = aggRepo.(aggNames{i}).Points';
+        p = aggRepo.(aggNames{i}).Points'; 
         f = aggRepo.(aggNames{i}).Faces';
-        
-        [volume, area] = stlVolume(p,f);
-        covRate = covRate + (-volume/containerVolume);
-        totalAggVol = totalAggVol + volume;
+        v = stlVolume(p,f);
+        v = -v;
+        covRate = covRate + (v/containerVolume);
+        totalAggVol = totalAggVol + v;
     end
     tAV = -totalAggVol;
 end

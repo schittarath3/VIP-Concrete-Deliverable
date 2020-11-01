@@ -61,7 +61,7 @@ while curSphereRate < sphereCovRate
     growIter = 2;
     while 1
         tryNum = 0;
-        if growIter == 6
+        if growIter == 4
             sphereNum = sphereNum + 1;
             [sphereVolume, sphereCell] = saveToSphereCell(newSphere, sphereCell, xyz, sphereNum);
             break;

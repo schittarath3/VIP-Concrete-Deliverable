@@ -22,12 +22,7 @@ Overview: Repoistory for code processing binary images into .stl files of concre
 
 2. STL Files Folder: Files for aggregate and box meshes
 
-3. Main Folder: Current working directory
-    1. Current pipeline:
-        1. reducemesh.m (stlVolume.m is a dependency)
-        2. cubelets.m
-        3. insertAgg.m
-        4. growAgg.m
-        5. aggCubeTest.m
+3. Main Folder: Current working directory. Creates (unevenly meshed) STL Files of packed aggregates into "/STL Files/Aggregates Out/All.stl". Individual aggregates are also included. All.stl must be remeshed using an edge length of 2-5mm in Meshmixer or a similar program. Concrete Driver.m runs through all the entire pipeline. All code in the main folder is written in Matlab.
+    
 
 Note: Detailed description of the functions of each code is described in comments
